@@ -1,0 +1,73 @@
+* {
+	margin: 0;
+	padding: 0;
+}
+html, body {
+	width: 100%;
+	height: 100%;
+}
+#app {
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+}
+$borderRadius: 5px;
+
+.modal{
+	background-color: rgba(0, 0, 0, .5);
+	width: 100%;
+	height: 100%;
+    display: block;
+}
+.modal.active{
+    display: block;
+}
+.mainWrap{
+	position: fixed;
+    left: 50%;
+    top: 50%;
+    margin-top: -300px;
+    margin-left: -500px;
+    z-index: 1002;
+
+    >.header{
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        border-radius: $borderRadius $borderRadius 0 0;
+        /* border-bottom: 1px solid #eaeaea; */
+
+
+        .close{
+            float: right;
+            width: 30px;
+            height: 30px;
+            color: #5a5a5a;
+            text-align: center;
+            line-height: 28px;
+            border-radius: 0 $borderRadius 0 0;
+            font-size: 18px;
+            box-sizing: border-box;
+
+            &:hover{
+                background-color: #eaeaea;
+                cursor: pointer;
+                font-weight: bold;
+            }
+        }
+    }
+}
+.main{
+	width: 100%;
+	height: 100%;
+	background-color: #fff;
+	box-shadow: rgba(0, 0, 0, 0.7) 0px 0px 25px;
+    border-radius: $borderRadius;
+    padding: 30px 20px 20px;
+    box-sizing: border-box;
+}

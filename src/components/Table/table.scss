@@ -1,0 +1,33 @@
+$class-prefix: "table";
+$fontSize: 14px;
+.#{$class-prefix}{
+	border-collapse: collapse;
+	width: 100%;
+	box-sizing: border-box;
+
+	thead, tbody {
+		width: 100%;
+	}
+	&, th, td {
+		border: none;
+	}
+	th, td {
+		text-align: left;
+		padding: 5px 8px;
+		font-size: $fontSize;
+	}
+	td.dbclickable{
+		cursor: default;
+	}
+	thead>tr{
+		border-top: 1px solid #eee;
+		border-bottom: 2px solid #eee;
+	}
+	tbody>tr{
+		border-bottom: 1px solid #eee;
+		&.clickable:hover{
+			cursor: pointer;
+			background-color: #eee;
+		}
+	}
+}

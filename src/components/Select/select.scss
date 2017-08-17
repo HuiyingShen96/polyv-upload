@@ -1,0 +1,71 @@
+$btnColor: #4f94fa;
+$btnFontSize: 14px;
+$btnHeight: 4ex;
+$borderRadius: 3px;
+$minWidth: 4em;
+.btn-select {
+    display: inline-block;
+    min-width: $minWidth;
+    height: $btnHeight;
+    line-height: $btnHeight;
+    text-align: center;
+    vertical-align: top;
+    border: none;
+    outline: none;
+    background: none;
+    color: #fff;
+    background-color: $btnColor;
+    border-radius: $borderRadius;
+    padding: 0 1em;
+    cursor: pointer;
+    font-size: $btnFontSize;
+    position: relative;
+
+    &.hide{
+        display: none;
+    }
+
+    .content{
+        display: none;
+        position: absolute;
+        left: 0;
+        top: $btnHeight;
+        min-width: 100%;
+        margin: 5px 0 0;
+        padding: 5px 0;
+        color: gray;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: $borderRadius;
+        box-shadow: 0 6px 12px rgba(0,0,0,.175);
+        background-color: #fff;
+    }
+
+    li{
+        list-style: none;
+        text-align: left;
+        padding: 5px 10px;
+        line-height: 2ex;
+        cursor: pointer;
+
+        &:hover{
+            background-color: #f5f5f5;
+        }
+    }
+
+    &.focus{
+        background-color: transparentize($btnColor, 0.15);
+        .content{
+            display: block;
+        }
+    }
+
+    &:hover {
+        background-color: transparentize($btnColor, 0.15);
+        color: #fff;
+    }
+
+    &.disabled {
+        background-color: transparentize($btnColor, 0.5);
+        cursor: default;
+    }
+}

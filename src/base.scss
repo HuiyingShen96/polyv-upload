@@ -1,0 +1,33 @@
+$fontSize: 14px;
+$btnHeight: 30px;
+
+*{
+	margin: 0;
+	padding: 0;
+}
+html, body{
+	height: 100%;
+}
+#polyv-upload{
+	padding: 10px 30px;
+    height: 100%;
+    box-sizing: border-box;
+    background-color: #fff;
+}
+
+$inputColor: rgb(153, 153, 153);
+input::-webkit-input-placeholder, textarea::-webkit-input-placeholder { 
+    color: $inputColor;
+}
+input:-moz-placeholder, textarea:-moz-placeholder { 
+    color: $inputColor;
+}
+input::-moz-placeholder, textarea::-moz-placeholder { 
+    color: $inputColor;
+}
+input:-ms-input-placeholder, textarea:-ms-input-placeholder { 
+    color: $inputColor;
+}
+input, textarea{
+	line-height: 1.42857143;
+}

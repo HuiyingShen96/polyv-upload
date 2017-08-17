@@ -1,0 +1,46 @@
+$btnColor: #4f94fa;
+$btnFontSize: 14px;
+$btnHeight: 30px;
+.btn-upload{
+    position: relative;
+    text-decoration: none;
+    cursor: pointer;
+    display: inline-block;
+    min-width: 4em;
+    padding: 0 1em;
+    height: $btnHeight;
+    line-height: $btnHeight;
+    text-align: center;
+    vertical-align: top;
+    border: none;
+    outline: none;
+    background: none;
+    color: #fff;
+    background-color: $btnColor;
+    border-radius: 3px;
+    padding: 0 1em;
+    cursor: pointer;
+    font-size: $btnFontSize;
+    box-sizing: border-box;
+
+    &:hover {
+        background-color: transparentize($btnColor, 0.15);
+        color: #fff;
+        cursor: pointer;
+    }
+    &.disabled {
+        background-color: transparentize($btnColor, 0.5);
+        cursor: default;
+    }
+    
+
+    >input {
+        opacity: 0;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        bottom: 0;
+        cursor: pointer;
+    }
+}
