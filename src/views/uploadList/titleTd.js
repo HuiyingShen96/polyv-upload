@@ -7,7 +7,7 @@ export default class TitleTd extends Component {
     constructor(props) {
         super(props);
 
-        this.handleDbclick = this.handleDbclick.bind(this);
+        this.handleClick = this.handleClick.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.handleKeyPress = this.handleKeyPress.bind(this);
         this.handleBlur = this.handleBlur.bind(this);
@@ -20,7 +20,7 @@ export default class TitleTd extends Component {
             inputBoxVisible: false,
         };
     }
-    handleDbclick(e) {
+    handleClick(e) {
         if (this.props.uploading) {
             return;
         }
@@ -70,14 +70,17 @@ export default class TitleTd extends Component {
         title = title.replace(/\.\w+$/, '');
 
         return (
-            <span onDoubleClick={this.handleDbclick}>
-			    <span style={{display: inputBoxVisible ? 'none': 'inline-block'}}>{title}</span>
-			    <input type='text' value={title} disabled={uploading ? 'disabled' : false}
-			    	ref={node => {this.inputBox = node}}
-			    	style={{display: inputBoxVisible?'inline-block': 'none'}}
-				    onChange={this.handleChange} 
-				    onBlur={this.handleBlur}
-				    onKeyPress={this.handleKeyPress} />
+            <span>
+                <span style={{display: inputBoxVisible ? 'none': 'inline-block'}}>
+                    <span>{title}</span>
+                    <i onClick={this.handleClick} className="fa fa-pencil" aria-hidden="true"></i>
+                </span>
+                <input type='text' value={title} disabled={uploading ? 'disabled' : false}
+                    ref={node => {this.inputBox = node;}}
+                    style={{display: inputBoxVisible?'inline-block': 'none'}}
+                    onChange={this.handleChange} 
+                    onBlur={this.handleBlur}
+                    onKeyPress={this.handleKeyPress} />
 			</span>
         );
     }
@@ -90,6 +93,6 @@ TitleTd.propTypes = {
 };
 TitleTd.defaultProps = {
 
-}
+};
 
 TitleTd.inputBox = null;

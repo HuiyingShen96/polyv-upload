@@ -1,7 +1,6 @@
 import React, {
     Component
 } from 'react';
-// import PropTypes from 'prop-types';
 import './videoList.scss';
 // import ListPanel from './listPanel';
 import InfoPanel from './infoPanel';
@@ -299,11 +298,16 @@ export default class VideoList extends Component {
     componentDidMount() {
         utils.addHander(window, 'message', event => {
             let data = event.data;
-            if (data.source !== 'polyv-upload') {
-                return;
+            console.log(data);
+            if (typeof data === 'string') {
+                this.userData = JSON.parse(data);
+                this.fetchVideoList(1);
             }
-            this.userData = data.userData;
-            this.fetchVideoList(1);
+            // if (data.source !== 'polyv-upload') {
+            //     return;
+            // }
+            // this.userData = data.userData;
+            // this.fetchVideoList(1);
         });
     }
     componentWillReceiveProps(nextProps) {
