@@ -27,6 +27,7 @@ function PolyvUpload(options) {
         cataid: options.cataid,
         luping: (options.luping || '0') + '',
         extra: JSON.stringify(options.extra || {}),
+        source: 'polyv-upload'
     };
     this.uploadButton = document.getElementById(options.uploadButtton);
     this.url = 'http://localhost:9090';
@@ -62,7 +63,7 @@ PolyvUpload.prototype = {
         wrapAll.style.display = 'none';
         wrap.style.cssText = 'display: block;position: fixed;left: 0;top: 0;width: 100%;height: 100%;z-index: 1001;background-color: #000;-moz-opacity: 0.5;opacity: .50;filter: alpha(opacity=50);';
         frameWrap.style.cssText = 'display: block;position: fixed;left: 50%;top: 50%;width: 1000px;height: 600px;margin-top: -300px;margin-left: -500px;z-index: 1002;box-shadow: 0 0 25px rgba(0,0,0,0.7);border-radius: 10px;';
-        cancle.innerHTML = 'x';
+        cancle.innerHTML = '&times;';
         cancle.style.cssText = 'width: 26px;height: 26px;position: absolute;top: 0px;right: 0px;cursor: pointer;background: #eee;text-align: center;line-height: 26px;color: #666;font-size: 16px;font-family: microsoft yahei;border-radius: 0 10px 0 0;';
         iframe.setAttribute('src', this.url);
         iframe.setAttribute('id', 'polyv-iframe');

@@ -1,6 +1,7 @@
 import React, {
     Component
 } from 'react';
+import PropTypes from 'prop-types';
 import './uploadList.scss';
 import Select from '../../components/Select/Select';
 import Button from '../../components/Button/Button';
@@ -30,8 +31,6 @@ export default class UploadList extends Component {
         this.handleSelectCategoryChange = this.handleSelectCategoryChange.bind(this);
 
         this.state = {
-            categoryOptions: null,
-
             files: [],
             curIndex: 0,
             uploadStatus: 0, // 上传状态（0:等待 1:就绪 2:执行 3:暂停）
@@ -265,47 +264,49 @@ export default class UploadList extends Component {
         });
     }
 
-    fetchCategory() {
-        let userData = this.userData;
-        utils.jsonp({
-            url: this.props.BASE_URL.getCategory,
-            data: {
-                cataid: userData.cataid || 1,
-                userid: userData.userid
-            },
-            done: data => {
-                let options = {};
-                data.forEach(ele => {
-                    options[ele.cataid] = ele.cataname;
-                });
+    // fetchCategory() {
+    //     let userData = this.userData;
+    //     utils.jsonp({
+    //         url: this.props.BASE_URL.getCategory,
+    //         data: {
+    //             cataid: userData.cataid || 1,
+    //             userid: userData.userid
+    //         },
+    //         done: data => {
+    //             let options = {};
+    //             data.forEach(ele => {
+    //                 options[ele.cataid] = ele.cataname;
+    //             });
 
-                this.setState({
-                    categoryOptions: options,
-                });
-            }
-        });
-    }
+    //             this.setState({
+    //                 categoryOptions: options,
+    //             });
+    //         }
+    //     });
+    // }
 
     componentDidMount() {
-        utils.addHander(window, 'message', event => {
-            let data = event.data;
-            if (data.source !== 'polyv-upload') {
-                return;
-            }
-            this.userData = data.userData;
+        // utils.addHander(window, 'message', event => {
+        //     let data = event.data;
+        //     if (data.source !== 'polyv-upload') {
+        //         return;
+        //     }
+        //     this.userData = data.userData;
 
-            this.fetchCategory();
-        });
+        //     this.fetchCategory();
+        // });
     }
 
     render() {
         let {
-            categoryOptions,
             fileOptions,
             uploadStatus,
             files,
             speedValue,
         } = this.state;
+        let {
+            cataOptions,
+        } = this.props;
 
         if ((uploadStatus === 0 || uploadStatus === 3) && this.speedTimer) {
             clearInterval(this.speedTimer);
@@ -325,7 +326,7 @@ export default class UploadList extends Component {
                         onChange={this.handleUploadBtnChange} />
                     <Select defaultText='选择分类'
                         disabled={uploadStatus > 1}
-                        options= {categoryOptions}
+                        options= {cataOptions}
                         className='btn'
                         onChange={this.handleSelectCategoryChange} />
                     <input className="btn" type="text" name="tag"
@@ -354,3 +355,8 @@ export default class UploadList extends Component {
 }
 UploadList.userData = {};
 UploadList.speedTimer = null;
+UploadList.propTypes = {
+    BASE_URL: PropTypes.object,
+    userData: PropTypes.object,
+    cataOptions: PropTypes.object,
+};

@@ -1,6 +1,7 @@
 import React, {
     Component
 } from 'react';
+import PropTypes from 'prop-types';
 import './videoList.scss';
 // import ListPanel from './listPanel';
 import InfoPanel from './infoPanel';
@@ -43,8 +44,9 @@ export default class VideoList extends Component {
             videoInfo: null, // 当前视频的详细信息
             loading: false, // 是否正在进行fetch请求
             noListData: true,
-            latestPic: [],
         };
+        this.tableWrapNode = null;
+        this.numPerPage = 15;
     }
 
     getTbodyData(videoList) {
@@ -55,7 +57,7 @@ export default class VideoList extends Component {
         videoList.map(vInfo => {
             tbodyData.push({
                 thumbnail: <img src={vInfo.first_image} alt={vInfo.title}/>,
-                title: vInfo.title,
+                title: <div className="titleWrap" title={vInfo.title}>{vInfo.title}</div>,
                 duration: vInfo.duration,
                 status: utils.transformStatus(vInfo.status),
                 ptime: vInfo.ptime
@@ -79,7 +81,7 @@ export default class VideoList extends Component {
             Object.assign(videoListTableData, {
                 tbodyData: []
             });
-        } else if (videoList.length === 0) {
+        } else if (!videoList || videoList.length === 0) {
             sysInfo = '没有更多信息！';
             Object.assign(pageStatus, {
                 next: false
@@ -182,11 +184,7 @@ export default class VideoList extends Component {
     handleRowDataClick(index) {
         let {
             videoList,
-            latestPic
         } = this.state;
-        if (!latestPic.length) {
-            this.fetchLatestPic();
-        }
         this.fetchVideoInfo(videoList[index].vid);
         this.setState({
             infoPanelVisible: true,
@@ -199,20 +197,19 @@ export default class VideoList extends Component {
             loading: true,
             curPageNum: pageNum,
         });
-        let numPerPage = this.state.numPerPage;
-        let BASE_URL = this.props.BASE_URL;
-        let userData = this.userData;
+        const userData = this.props.userData;
+
         let queryParams = {
             method: 'getNewList2',
             userid: userData.userid,
             ts: userData.ts,
             sign: userData.sign,
             pageNum,
-            numPerPage,
+            numPerPage: this.numPerPage,
         };
 
         utils.getJSON({
-            url: BASE_URL.getVideoList,
+            url: this.props.BASE_URL.getVideoList,
             data: queryParams,
             done: data => {
                 this.processVideoListData(data);
@@ -229,7 +226,7 @@ export default class VideoList extends Component {
             curPageNum: pageNum,
         });
         let numPerPage = this.state.numPerPage;
-        const userData = this.userData;
+        const userData = this.props.userData;
         let BASE_URL = this.props.BASE_URL;
         let queryParams = {
             method: 'searchByTitle2',
@@ -258,7 +255,7 @@ export default class VideoList extends Component {
             loading: true
         });
         let BASE_URL = this.props.BASE_URL;
-        let userData = this.userData;
+        let userData = this.props.userData;
         let queryParams = {
             method: 'getById2',
             userid: userData.userid,
@@ -279,40 +276,17 @@ export default class VideoList extends Component {
             fail: err => console.log(err)
         });
     }
-    fetchLatestPic() {
-        let BASE_URL = this.props.BASE_URL;
-        let userData = this.userData;
-        utils.jsonp({
-            url: BASE_URL.getLatestPic,
-            data: {
-                userid: userData.userid
-            },
-            done: latestPic => {
-                this.setState({
-                    latestPic
-                });
-            }
-        });
-    }
 
-    componentDidMount() {
-        utils.addHander(window, 'message', event => {
-            let data = event.data;
-            console.log(data);
-            if (typeof data === 'string') {
-                this.userData = JSON.parse(data);
-                this.fetchVideoList(1);
-            }
-            // if (data.source !== 'polyv-upload') {
-            //     return;
-            // }
-            // this.userData = data.userData;
-            // this.fetchVideoList(1);
-        });
-    }
     componentWillReceiveProps(nextProps) {
+        let {
+            videoListIsClicked,
+            userData,
+        } = nextProps;
+        if (videoListIsClicked && userData) {
+            this.fetchVideoList(1);
+        }
         this.setState({
-            infoPanelVisible: !nextProps.returnToList,
+            infoPanelVisible: !videoListIsClicked,
         });
     }
     componentDidUpdate() {
@@ -328,8 +302,11 @@ export default class VideoList extends Component {
             sysInfo,
             videoListTableData,
             pageStatus,
-            latestPic,
         } = this.state;
+        let {
+            userData,
+            BASE_URL,
+        } = this.props;
 
         let infoProps = {
             visible: infoPanelVisible,
@@ -342,9 +319,8 @@ export default class VideoList extends Component {
                 }
             },
             videoInfo,
-            latestPic,
-            userData: this.userData,
-            BASE_URL: this.props.BASE_URL,
+            userData,
+            BASE_URL,
         };
         let searchBarProps = {
             searchKeyword,
@@ -400,5 +376,10 @@ export default class VideoList extends Component {
         );
     }
 }
-VideoList.userData = null;
-VideoList.tableWrapNode = null;
+// VideoList.tableWrapNode = null;
+// VideoList.numPerPage = 15;
+VideoList.propTypes = {
+    videoListIsClicked: PropTypes.bool,
+    BASE_URL: PropTypes.object,
+    userData: PropTypes.object,
+};

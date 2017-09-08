@@ -15,6 +15,7 @@ export default class InfoPanel extends Component {
         super(props);
 
         this.handleSaveClick = this.handleSaveClick.bind(this);
+        this.handleReturnClick = this.handleReturnClick.bind(this);
         this.handleCloseClick = this.handleCloseClick.bind(this);
         this.handleUploadBtnChange = this.handleUploadBtnChange.bind(this);
 
@@ -36,7 +37,8 @@ export default class InfoPanel extends Component {
             videoCoverUrl: '',
             uploadData: {},
             editStatus: false,
-            tabIndex: 0
+            latestPic: [],
+            tabIndex: 0,
         };
     }
 
@@ -61,7 +63,8 @@ export default class InfoPanel extends Component {
                 sign: userData.sign,
                 Filedata: file
             },
-            done: res => this.doneSave(res)
+            done: res => this.doneSave(res),
+            fail: err => this.failSave(err),
         });
     }
     changeCoverByMethod_2() {
@@ -91,13 +94,21 @@ export default class InfoPanel extends Component {
         utils.getJSON({
             url: this.props.BASE_URL.getVideoList,
             data,
-            done: res => this.doneSave(res)
+            done: res => this.doneSave(res),
+            fail: err => this.failSave(err),
         });
     }
     doneSave(res) {
         if (res.error === '0') {
-            console.log('成功更换封面！');
+            // console.log('成功更换封面！');
+            alert('成功更换封面');
+        } else {
+            console.log(res);
         }
+    }
+    failSave(err) {
+        alert('网络原因，请刷新后重试');
+        console.log(err);
     }
     handleImgClick(params) {
         let uploadData = params.hasOwnProperty('selectedIndex') ? {
@@ -124,6 +135,9 @@ export default class InfoPanel extends Component {
             console.log(this.uploadMethod);
         }
     }
+    handleReturnClick() {
+        window.parent.postMessage(JSON.stringify(this.props.videoInfo), '*');
+    }
     handleCloseClick() {
         this.setState({
             editStatus: false,
@@ -144,6 +158,22 @@ export default class InfoPanel extends Component {
             });
             this.uploadMethod = this.changeCoverByMethod_1;
         };
+    }
+
+    fetchLatestPic() {
+        let BASE_URL = this.props.BASE_URL;
+        let userData = this.props.userData;
+        utils.jsonp({
+            url: BASE_URL.getLatestPic,
+            data: {
+                userid: userData.userid
+            },
+            done: latestPic => {
+                this.setState({
+                    latestPic,
+                });
+            }
+        });
     }
 
     componentWillReceiveProps(nextProps) {
@@ -206,12 +236,12 @@ export default class InfoPanel extends Component {
             tableData,
             videoCoverUrl,
             editStatus,
+            latestPic,
             tabIndex,
         } = this.state;
 
         let {
             videoInfo,
-            latestPic
         } = this.props;
 
         if (!videoInfo) {
@@ -221,8 +251,12 @@ export default class InfoPanel extends Component {
             className: 'tabs-bar',
             activeIndex: tabIndex,
             onChange: options => {
+                let tabIndex = options.activeIndex;
+                if (tabIndex === 1) { // 选择“最近上传”
+                    this.fetchLatestPic();
+                }
                 this.setState({
-                    tabIndex: options.activeIndex
+                    tabIndex,
                 });
             }
         };
@@ -239,6 +273,7 @@ export default class InfoPanel extends Component {
                 <div className="btn-wrap">
                     <Button value="保存" visible={editStatus} onClick={this.handleSaveClick} />
                     <Button value="取消并关闭" visible={editStatus} onClick={this.handleCloseClick} />
+                    <Button value="返回视频信息" visible={!editStatus} onClick={this.handleReturnClick} />
                     <Button value="关闭" visible={!editStatus} onClick={this.handleCloseClick} />
                 </div>
                 <section className="section_1">

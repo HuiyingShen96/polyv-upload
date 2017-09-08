@@ -29,9 +29,7 @@ export default class Table extends Component {
             let trHtml = [];
             for (let key in trInfo) {
                 if (trInfo.hasOwnProperty(key)) {
-                    let className = classnames(key, {
-                        'dbclickable': true,
-                    });
+                    let className = classnames(key);
                     trHtml.push(<td key={key} className={className}>{trInfo[key]}</td>);
                 }
             }

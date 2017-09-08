@@ -47,6 +47,21 @@ $tableHeight: 410px;
 		width: 100px;
 		height: 60px;
 	}
+	td.title .titleWrap {
+		width: 250px;
+	    display: block;
+	    overflow-x: hidden;
+	    text-overflow: ellipsis;
+	}
+	th.duration, td.duration {
+		width: 120px;
+	}
+	th.status, td.status {
+		width: 120px;
+	}
+	th.ptime, td.ptime {
+		width: 220px;
+	}
 
 	#pageControl{
 		text-align: center;
@@ -55,6 +70,7 @@ $tableHeight: 410px;
 			margin: 0 10px;
 		}
 	}
+
 }
 
 .infoPanel {
@@ -87,7 +103,7 @@ $tableHeight: 410px;
 	.thumbnail{
 		>img{
 			max-height: 125px;
-			max-width: 100%;
+			max-width: 200px;
 			min-width: 125px;
 			margin-right: 50px;
 			padding: 2px;
