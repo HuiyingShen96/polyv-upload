@@ -54,7 +54,6 @@ $fontSize: 14px;
 	tbody>tr{
 		border-top: 1px solid #eee;
 		border-bottom: none;
-		// height: $trHeight;
 		box-sizing: border-box;
 
 		&:nth-child(odd){
@@ -62,12 +61,11 @@ $fontSize: 14px;
 		}
 	}
 	td{
-		// height: $trHeight;
 		box-sizing: border-box;
 	}
 
 	td.fileName {
-		width: 15em;
+		width: 30%;
 
 		>span{
 			display: inline-block;
@@ -89,7 +87,7 @@ $fontSize: 14px;
 	} 
 
 	td.description{
-		width: 25em;
+		width: 30%;
         textarea{
             padding: 5px 8px;
             border-radius: 5px;
@@ -107,7 +105,7 @@ $fontSize: 14px;
     }
 
     td.progress{
-    	width: 20em;
+    	width: 30%;
         p{
             line-height: 3ex;
             font-size: $fontSize;
@@ -131,6 +129,9 @@ $fontSize: 14px;
         }
     }
     td.deleteBtn{
+    	width: 10%;
+    	text-align: center;
+
         .button{
         	float: right;
             background-color: #d9534f;
@@ -149,7 +150,28 @@ $fontSize: 14px;
     }
 }
 
-i.fa-pencil{
+i.fa-pencil {
 	float: right;
 	margin-right: 8px;
+}
+i.fa-check {
+	color: #5cb85c;
+	font-size: 20px;
+}
+i.fa-trash-o {
+	background-color: #ff5b5b;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 3px;
+
+    &:hover {
+		opacity: .85;
+		cursor: pointer;
+	}
+	&.disabled {
+		opacity: .5;
+		&:hover {
+			cursor: default;
+		}
+	}
 }

@@ -40,11 +40,14 @@ export default class UploadList extends Component {
                 tag: '',
             },
             speedValue: '0.0 kb/s',
+            totalBytesUploaded: 0,
+            totalBytesTotal: 0,
         };
 
         this.uploadProgress = {
             lastSize: 0,
             newSize: 0,
+            totalBytesFinished: 0,
         };
     }
 
@@ -64,22 +67,38 @@ export default class UploadList extends Component {
             });
         }
 
-        function deleteFile(fileKey) {
+        function deleteFile(fileKey, disabled) {
+            if (disabled) {
+                return;
+            }
             let files = this.state.files.slice();
             let uploadStatus = this.state.uploadStatus;
+            let totalBytesTotal = this.state.totalBytesTotal;
+            let totalBytesUploaded = this.state.totalBytesUploaded;
 
             let index = files.findIndex(ele => {
                 return ele.key === fileKey;
             });
             let delFileArr = files.splice(index, 1);
             let delFile = delFileArr[0];
+
+            utils.sendMsg({
+                type: 'FILE_CANCEL',
+                data: delFile
+            });
+
             if (files.length <= this.state.curIndex) {
                 uploadStatus = 0;
             }
 
+            totalBytesTotal -= delFile.size;
+            totalBytesUploaded -= delFile.bytesUploaded;
+
             this.setState({
                 files,
                 uploadStatus,
+                totalBytesTotal,
+                totalBytesUploaded,
             });
         }
 
@@ -89,6 +108,8 @@ export default class UploadList extends Component {
                 size = utils.transformSize(file.size);
             let uploading = (file.progress > 0),
                 finished = (file.progress >= 100);
+
+            let disabledDelete = this.state.uploadStatus === 2;
 
             let fileName = (
                     <TitleTd 
@@ -110,7 +131,7 @@ export default class UploadList extends Component {
                         </div>
                     </div>
                 ),
-                deleteBtn = finished ? <span>Finished!</span> : <Button value='删除' disabled={this.state.uploadStatus === 2} onClick={deleteFile.bind(this, file.key)} />;
+                deleteBtn = finished ? <i className="fa fa-check" aria-hidden="true"></i> : <i className={'fa fa-trash-o ' + (disabledDelete ? 'disabled' : '')} aria-hidden="true" onClick={deleteFile.bind(this, file.key, disabledDelete)}></i>;
             tbodyData.push({
                 fileName,
                 description,
@@ -121,11 +142,30 @@ export default class UploadList extends Component {
         return tbodyData;
     }
     uploadFile(file, curIndex) {
-        function progress(loaded, total) {
+        function progress(curIndex, loaded, total) {
+            if (typeof loaded !== 'number' || typeof total !== 'number') {
+                return;
+            }
+
             let files = this.state.files.slice();
+
+            let totalBytesUploaded = this.uploadProgress.totalBytesFinished + loaded;
+
             this.uploadProgress.newSize = loaded;
             let percentComplete = ((loaded / total) * 100).toFixed(2);
             files[curIndex].progress = parseFloat(percentComplete);
+            files[curIndex].bytesUploaded = loaded;
+
+            utils.sendMsg({
+                type: 'FILE_PROGRESS',
+                data: {
+                    file: files[curIndex],
+                    bytesUploaded: loaded,
+                    bytesTotal: total,
+                    totalBytesUploaded: totalBytesUploaded,
+                    totalBytesTotal: this.state.totalBytesTotal,
+                }
+            });
 
             this.setState({
                 files: files,
@@ -134,12 +174,23 @@ export default class UploadList extends Component {
 
         function done() {
             let files = this.state.files.slice();
+            utils.sendMsg({
+                type: 'FILE_COMPLETE',
+                data: files[curIndex]
+            });
+            this.uploadProgress.totalBytesFinished += files[curIndex].size;
             curIndex++;
             let uploadStatus = this.state.uploadStatus;
             if (curIndex < files.length) {
                 this.uploadFile(files[curIndex], curIndex);
             } else {
-                alert('上传完毕！');
+                utils.sendMsg({
+                    type: 'QUEUE_COMPLETE',
+                    data: {
+                        uploadsSuccessful: files,
+                        uploadsErrored: [],
+                    },
+                });
                 uploadStatus = 0;
             }
 
@@ -150,11 +201,16 @@ export default class UploadList extends Component {
             });
         }
 
+        utils.sendMsg({
+            type: 'UPLOAD_START',
+            data: file
+        });
+
         let {
             cataid,
             tag
         } = this.state.fileOptions;
-        let userData = this.userData;
+        let userData = this.props.userData;
 
         let options = {
             endpoint: uploadServer,
@@ -173,7 +229,7 @@ export default class UploadList extends Component {
             desc: file.desc,
             ext: file.type.replace(/.+\//, ''),
 
-            progress: progress.bind(this),
+            progress: progress.bind(this, curIndex),
             done: done.bind(this),
         };
         polyv.upload(file, options);
@@ -183,12 +239,25 @@ export default class UploadList extends Component {
     handleUploadBtnChange(files) {
         let addTime = Date.now();
         let uploadStatus = this.state.uploadStatus;
+        let totalBytesTotal = this.state.totalBytesTotal;
         let newFiles = Array.from(files);
+
         newFiles.forEach(file => {
             file.key = `${addTime}_${file.name}`;
             file.title = file.name.split('.')[0];
             file.desc = '';
             file.progress = 0;
+            file.bytesUploaded = 0;
+
+            file.fileName = file.name;
+            file.fileType = file.type;
+            file.fileSize = file.size;
+
+            utils.sendMsg({
+                type: 'FILE_SELECT',
+                data: file
+            });
+            totalBytesTotal += file.size;
         });
         let concatFiles = this.state.files.slice();
 
@@ -201,6 +270,7 @@ export default class UploadList extends Component {
         this.setState({
             uploadStatus,
             files: concatFiles,
+            totalBytesTotal,
         });
     }
     handleTagChange(e) {
@@ -211,14 +281,20 @@ export default class UploadList extends Component {
         });
     }
     handleEmptyClick() {
+        utils.sendMsg({
+            type: 'CLEAR_QUEUE',
+            data: this.state.files,
+        });
+
         this.setState({
             files: [],
             curIndex: 0,
             uploadStatus: 0,
+            totalBytesTotal: 0,
+            totalBytesUploaded: 0,
         });
     }
     handlePauseClick() {
-        console.log(this.state.uploadStatus);
         let uploadStatus = this.state.uploadStatus;
 
         let isPaused = uploadStatus === 3;
@@ -262,39 +338,6 @@ export default class UploadList extends Component {
         this.setState({
             fileOptions,
         });
-    }
-
-    // fetchCategory() {
-    //     let userData = this.userData;
-    //     utils.jsonp({
-    //         url: this.props.BASE_URL.getCategory,
-    //         data: {
-    //             cataid: userData.cataid || 1,
-    //             userid: userData.userid
-    //         },
-    //         done: data => {
-    //             let options = {};
-    //             data.forEach(ele => {
-    //                 options[ele.cataid] = ele.cataname;
-    //             });
-
-    //             this.setState({
-    //                 categoryOptions: options,
-    //             });
-    //         }
-    //     });
-    // }
-
-    componentDidMount() {
-        // utils.addHander(window, 'message', event => {
-        //     let data = event.data;
-        //     if (data.source !== 'polyv-upload') {
-        //         return;
-        //     }
-        //     this.userData = data.userData;
-
-        //     this.fetchCategory();
-        // });
     }
 
     render() {
@@ -353,7 +396,6 @@ export default class UploadList extends Component {
         );
     }
 }
-UploadList.userData = {};
 UploadList.speedTimer = null;
 UploadList.propTypes = {
     BASE_URL: PropTypes.object,

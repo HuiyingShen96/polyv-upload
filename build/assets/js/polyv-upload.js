@@ -18,7 +18,7 @@
  *  closeWrap(): 关闭插件
  **/
 function PolyvUpload(options) {
-    this.param = {
+    this.options = {
         sign: options.sign,
         userid: options.userid,
         hash: options.hash,
@@ -27,16 +27,26 @@ function PolyvUpload(options) {
         cataid: options.cataid,
         luping: (options.luping || '0') + '',
         extra: JSON.stringify(options.extra || {}),
-        source: 'polyv-upload'
+        source: 'polyv-upload',
+        response: options.response,
+        openWrap: options.openWrap,
+        onCancle: options.onCancle,
+        onClearQueue: options.onClearQueue,
+        onQueueComplete: options.onQueueComplete,
+        onSelect: options.onSelect,
+        onUploadComplete: options.onUploadComplete,
+        onUploadProgress: options.onUploadProgress,
+        onUploadStart: options.onUploadStart,
     };
     this.uploadButton = document.getElementById(options.uploadButtton);
-    this.url = 'http://localhost:9090';
+    // this.url = 'http://localhost:9090';
+    this.url = 'http://localhost:8088/upload-webpack-react/build/index.html';
     // this.url = 'http://localhost:8088/build/index.html';
     // this.url = 'http://localhost:8088/upload-webpack-react/build/index.html';
     this._init();
-    if (options.response !== undefined) {
-        this._handleMsgReceive(options.response);
-    }
+    // if (options.response !== undefined) {
+    //     this._handleMsgReceive(options.response);
+    // }
 }
 PolyvUpload.prototype = {
     constructor: PolyvUpload,
@@ -92,13 +102,67 @@ PolyvUpload.prototype = {
             wrapAll.style.display = 'none';
         };
         this._addHander(this.uploadButton, 'click', function() {
-            wrapAll.style.display = 'block';
+            self.openWrap();
         });
+
+        this._handleMsgReceive();
     },
 
-    _handleMsgReceive: function(callbackFunc) {
+    _handleMsgReceive: function() {
+        var self = this;
         this._addHander(window, 'message', function(event) {
-            callbackFunc(JSON.parse(event.data));
+            var msgData = JSON.parse(event.data);
+            switch (msgData.type) {
+                case 'VIDEO_INFO':
+                    if (typeof self.options.response === 'function') {
+                        self.options.response(msgData.data);
+                    }
+                    break;
+                case 'CLEAR_QUEUE':
+                    if (typeof self.options.onClearQueue === 'function') {
+                        self.options.onClearQueue(msgData.data);
+                    }
+                    break;
+                case 'QUEUE_COMPLETE':
+                    if (typeof self.options.onQueueComplete === 'function') {
+                        self.options.onQueueComplete(msgData.data);
+                    }
+                    break;
+                case 'FILE_CANCEL':
+                    if (typeof self.options.onCancle === 'function') {
+                        self.options.onCancle(msgData.data);
+                    }
+                    break;
+                case 'FILE_SELECT':
+                    if (typeof self.options.onSelect === 'function') {
+                        self.options.onSelect(msgData.data);
+                    }
+                    break;
+                case 'FILE_COMPLETE':
+                    if (typeof self.options.onUploadComplete === 'function') {
+                        self.options.onUploadComplete(msgData.data);
+                    }
+                    break;
+                case 'FILE_PROGRESS':
+                    if (typeof self.options.onUploadProgress === 'function') {
+                        let {
+                            file,
+                            bytesUploaded,
+                            bytesTotal,
+                            totalBytesUploaded,
+                            totalBytesTotal
+                        } = msgData.data;
+                        self.options.onUploadProgress(file, bytesUploaded, bytesTotal, totalBytesUploaded, totalBytesTotal);
+                    }
+                    break;
+                case 'UPLOAD_START':
+                    if (typeof self.options.onUploadStart === 'function') {
+                        self.options.onUploadStart(msgData.data);
+                    }
+                    break;
+                default:
+                    break;
+            }
         });
     },
 
@@ -107,13 +171,17 @@ PolyvUpload.prototype = {
         if (typeof arguments[0] === 'object') {
             for (var i in arguments[0]) {
                 if (arguments[0].hasOwnProperty(i)) {
-                    this.param[i] = arguments[0][i];
+                    this.options[i] = arguments[0][i];
                 }
             }
         }
-        this.frameMsg.postMessage(JSON.stringify(this.param), this.url);
+        this.frameMsg.postMessage(JSON.stringify(this.options), this.url);
     },
 
+    openWrap: function() {
+        this.options.openWrap && this.options.openWrap();
+        document.getElementById('polyv-wrapAll').style.display = 'block';
+    },
     closeWrap: function() {
         document.getElementById('polyv-wrapAll').style.display = 'none';
     }

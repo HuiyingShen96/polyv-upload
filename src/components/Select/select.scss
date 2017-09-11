@@ -21,6 +21,10 @@ $minWidth: 4em;
     font-size: $btnFontSize;
     position: relative;
 
+    .fa-caret-down {
+        margin-left: 10px;
+    }
+
     &.hide{
         display: none;
     }

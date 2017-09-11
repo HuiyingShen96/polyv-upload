@@ -136,7 +136,10 @@ export default class InfoPanel extends Component {
         }
     }
     handleReturnClick() {
-        window.parent.postMessage(JSON.stringify(this.props.videoInfo), '*');
+        utils.sendMsg({
+            type: 'VIDEO_INFO',
+            data: this.props.videoInfo,
+        });
     }
     handleCloseClick() {
         this.setState({

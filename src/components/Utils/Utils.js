@@ -1,4 +1,14 @@
 export default class Utils {
+    sendMsg({
+        type,
+        data
+    }) {
+        var msgData = {
+            type: type,
+            data: data,
+        };
+        window.parent.postMessage(JSON.stringify(msgData), '*');
+    }
     addHander(ele, type, handler) {
         if (ele.addEventListener) {
             ele.addEventListener(type, handler, false);

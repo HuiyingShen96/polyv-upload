@@ -73,7 +73,8 @@ export default class TitleTd extends Component {
             <span>
                 <span style={{display: inputBoxVisible ? 'none': 'inline-block'}}>
                     <span>{title}</span>
-                    <i onClick={this.handleClick} className="fa fa-pencil" aria-hidden="true"></i>
+                    <i onClick={this.handleClick} className="fa fa-pencil" aria-hidden="true"
+                        style={{visibility: uploading ? 'hidden' : 'visible'}}></i>
                 </span>
                 <input type='text' value={title} disabled={uploading ? 'disabled' : false}
                     ref={node => {this.inputBox = node;}}

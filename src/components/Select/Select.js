@@ -70,7 +70,7 @@ export default class Select extends Component {
 
         return (
             <div className={wrapClassName}>
-                <div className="title" onClick={this.handleTitleClick}>{text}</div>
+                <div className="title" onClick={this.handleTitleClick}>{text}<i className="fa fa-caret-down" aria-hidden="true"></i></div>
                 <div className="content">
                     <ul>
                         {options && Object.keys(options).map((key, index) => { 

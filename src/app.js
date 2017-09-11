@@ -41,6 +41,7 @@ class UploadModal extends Component {
                     options[ele.cataid] = ele.cataname;
                 });
 
+
                 this.setState({
                     cataOptions: options,
                     userData: userData,
