@@ -7,6 +7,7 @@ import Button from '../../components/Button/Button';
 import Tabs from '../../components/Tabs/Tabs';
 import TabPanel from '../../components/Tabs/TabPanel';
 import UploadButton from '../../components/UploadButton/UploadButton';
+import SysInfo from '../../components/SysInfo/SysInfo';
 import Utils from '../../components/Utils/Utils';
 let utils = new Utils();
 
@@ -36,9 +37,10 @@ export default class InfoPanel extends Component {
             tableData,
             videoCoverUrl: '',
             uploadData: {},
-            editStatus: false,
+            editStatus: props.editStatus,
             latestPic: [],
             tabIndex: 0,
+            sysInfo: '',
         };
     }
 
@@ -48,9 +50,10 @@ export default class InfoPanel extends Component {
             return;
         }
         let {
-            userData,
+            // userData,
             videoInfo
         } = this.props;
+        let userData = window.userData;
         utils.uploadFile({
             url: this.props.BASE_URL.getVideoList,
             queryParams: {
@@ -69,9 +72,10 @@ export default class InfoPanel extends Component {
     }
     changeCoverByMethod_2() {
         let {
-            userData,
+            // userData,
             videoInfo
         } = this.props;
+        let userData = window.userData;
         let {
             uploadData
         } = this.state;
@@ -100,14 +104,27 @@ export default class InfoPanel extends Component {
     }
     doneSave(res) {
         if (res.error === '0') {
-            // console.log('成功更换封面！');
-            alert('成功更换封面');
+            this.setState({
+                sysInfo: '成功更换封面',
+            });
+            setTimeout(() => {
+                this.setState({
+                    sysInfo: ''
+                });
+            }, 2000);
         } else {
             console.log(res);
         }
     }
     failSave(err) {
-        alert('网络原因，请刷新后重试');
+        this.setState({
+            sysInfo: '保存失败，请刷新后重试',
+        });
+        setTimeout(() => {
+            this.setState({
+                sysInfo: ''
+            });
+        }, 2000);
         console.log(err);
     }
     handleImgClick(params) {
@@ -127,6 +144,7 @@ export default class InfoPanel extends Component {
         this.isChange = true;
         this.setState({
             editStatus: false,
+            sysInfo: '保存封面中...',
         });
         if (this.uploadMethod instanceof Function) {
             this.uploadMethod();
@@ -139,6 +157,7 @@ export default class InfoPanel extends Component {
         utils.sendMsg({
             type: 'VIDEO_INFO',
             data: this.props.videoInfo,
+            url: window.userData.url
         });
     }
     handleCloseClick() {
@@ -154,6 +173,7 @@ export default class InfoPanel extends Component {
         this.file = file;
         var reader = new FileReader();
         reader.readAsDataURL(file);
+
         reader.onload = event => {
             this.setState({
                 editStatus: true,
@@ -165,7 +185,7 @@ export default class InfoPanel extends Component {
 
     fetchLatestPic() {
         let BASE_URL = this.props.BASE_URL;
-        let userData = this.props.userData;
+        let userData = window.userData;
         utils.jsonp({
             url: BASE_URL.getLatestPic,
             data: {
@@ -182,10 +202,16 @@ export default class InfoPanel extends Component {
     componentWillReceiveProps(nextProps) {
         let {
             videoInfo,
+            editStatus,
         } = nextProps;
         if (!videoInfo) {
             return;
         }
+
+        let {
+            videoCoverUrl
+        } = this.state;
+        videoCoverUrl = editStatus ? videoCoverUrl : '';
 
         function getSize(sizeArr) {
             let tempArr = Array(3).fill('-'),
@@ -231,6 +257,8 @@ export default class InfoPanel extends Component {
                 tbodyData,
             },
             tabIndex: 0,
+            editStatus,
+            videoCoverUrl,
         });
     }
 
@@ -241,6 +269,7 @@ export default class InfoPanel extends Component {
             editStatus,
             latestPic,
             tabIndex,
+            sysInfo,
         } = this.state;
 
         let {
@@ -270,9 +299,11 @@ export default class InfoPanel extends Component {
             accept: 'image/*',
             multiple: false,
         };
+        let sysInfoVisiable = !!sysInfo;
 
         return (
             <div className="infoPanel" style={{display: this.props.visible ? 'block' : 'none'}}>
+                <SysInfo visible={sysInfoVisiable} sysInfo={sysInfo} />
                 <div className="btn-wrap">
                     <Button value="保存" visible={editStatus} onClick={this.handleSaveClick} />
                     <Button value="取消并关闭" visible={editStatus} onClick={this.handleCloseClick} />
@@ -309,7 +340,7 @@ export default class InfoPanel extends Component {
                     <Tabs {...tabsProps}>
                         <TabPanel className="screenshot" order="0" tab={'视频截图'}>
                             {videoInfo.images && videoInfo.images.map((imgUrl, index) => {
-                                return <img src={imgUrl} key={index} onClick={this.handleImgClick.bind(this, {selectedIndex:index, imgUrl: imgUrl})} alt={`视频截图_${index}`}/>;
+                                return <img src={imgUrl} key={index} onClick={this.handleImgClick.bind(this, {selectedIndex:index, imgUrl: imgUrl})} />;
                             })}
                         </TabPanel>
                         <TabPanel className="uploadPic" order="1" tab={'最近上传'}>
@@ -328,14 +359,14 @@ InfoPanel.uploadMethod = null;
 InfoPanel.isChange = false;
 
 InfoPanel.propTypes = {
-    userData: PropTypes.object,
+    // userData: PropTypes.object,
     BASE_URL: PropTypes.object,
     visible: PropTypes.bool,
     videoInfo: PropTypes.object,
     latestPic: PropTypes.array,
 };
 InfoPanel.defaultProps = {
-    userData: {},
+    // userData: {},
     BASE_URL: {},
     visible: false,
     videoInfo: null,

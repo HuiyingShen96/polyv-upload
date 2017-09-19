@@ -13,6 +13,8 @@ import Utils from './components/Utils/Utils';
 let utils = new Utils();
 import './base.scss';
 
+window.userData = null;
+
 class UploadModal extends Component {
     constructor(props) {
         super(props);
@@ -22,13 +24,14 @@ class UploadModal extends Component {
                 getLatestPic: '//v.polyv.net/uc/video/recentFirstImages',
                 getCategory: '//v.polyv.net/uc/cata/listjson',
             },
-            userData: null,
+            // userData: null,
             cataOptions: null,
             videoListIsClicked: false,
         };
     }
 
-    fetchCategory(userData) {
+    fetchCategory() {
+        let userData = window.userData;
         utils.jsonp({
             url: this.state.BASE_URL.getCategory,
             data: {
@@ -36,15 +39,22 @@ class UploadModal extends Component {
                 userid: userData.userid
             },
             done: data => {
-                let options = {};
+                let options = {
+                    '1': '默认分类'
+                };
+                var minLen = data[0].catatree.match(/,/g).length - 1;
                 data.forEach(ele => {
-                    options[ele.cataid] = ele.cataname;
-                });
+                    let level = ele.catatree.match(/,/g).length - 1 - minLen;
+                    let levelStr = '';
+                    for (let i = 0, len = level; i < len; i++) {
+                        levelStr += '-- ';
+                    }
 
+                    options[ele.cataid] = levelStr + ele.cataname;
+                });
 
                 this.setState({
                     cataOptions: options,
-                    userData: userData,
                 });
             }
         });
@@ -57,28 +67,48 @@ class UploadModal extends Component {
             if (!data || data.source !== 'polyv-upload') {
                 return;
             }
-            delete data.source;
-            this.fetchCategory(data);
+            window.userData = {
+                sign: data.sign,
+                userid: data.userid,
+                hash: data.hash,
+                ts: data.ts,
+                url: data.url,
+                cataid: data.cataid,
+                luping: data.luping,
+                extra: data.extra,
+            };
+            if (!this.state.cataOptions) {
+                this.fetchCategory();
+            }
+            // this.setState({
+            //     userData: userData,
+            // });
         });
     }
 
     render() {
         let {
             BASE_URL,
-            userData,
+            // userData,
             cataOptions,
             videoListIsClicked,
         } = this.state;
 
         let publicProps = {
             BASE_URL,
-            userData,
+            // userData,
         };
         let uploadListPorps = {
             cataOptions,
         };
         let videoListPorps = {
             videoListIsClicked,
+            onListChange: () => {
+                let videoListIsClicked = false;
+                this.setState({
+                    videoListIsClicked,
+                });
+            }
         };
         let tabsProps = {
             defaultActiveIndex: 0,

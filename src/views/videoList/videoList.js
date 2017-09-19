@@ -44,6 +44,7 @@ export default class VideoList extends Component {
             videoInfo: null, // 当前视频的详细信息
             loading: false, // 是否正在进行fetch请求
             noListData: true,
+            editStatus: false,
         };
         this.tableWrapNode = null;
         this.numPerPage = 15;
@@ -114,7 +115,7 @@ export default class VideoList extends Component {
             videoListTableData,
             pageStatus,
             sysInfo,
-            videoList
+            videoList,
         });
     }
     processVideoInfoData(videoInfoData) {
@@ -138,20 +139,25 @@ export default class VideoList extends Component {
             this.fetchVideoByKeyword(1, keyword);
         }
 
+        let infoPanelVisible = false;
         this.setState({
             searchKeyword: keyword,
-            infoPanelVisible: false
+            infoPanelVisible,
         });
+        // this.handleInfoPanelVisibleChange(infoPanelVisible);
     }
     handleReturnClick() {
         if (this.state.searchKeyword === '') {
             return;
         }
+
+        let infoPanelVisible = false;
         this.setState({
             curPageNum: 1,
             searchKeyword: '',
-            infoPanelVisible: false,
+            infoPanelVisible,
         });
+        // this.handleInfoPanelVisibleChange(infoPanelVisible);
         this.fetchVideoList(1);
         // this.fetchVideoByKeyword(1, '');
     }
@@ -186,10 +192,12 @@ export default class VideoList extends Component {
             videoList,
         } = this.state;
         this.fetchVideoInfo(videoList[index].vid);
+        let infoPanelVisible = true;
         this.setState({
-            infoPanelVisible: true,
+            infoPanelVisible,
             searchKeyword: '',
         });
+        // this.handleInfoPanelVisibleChange(infoPanelVisible);
     }
 
     fetchVideoList(pageNum) {
@@ -197,7 +205,8 @@ export default class VideoList extends Component {
             loading: true,
             curPageNum: pageNum,
         });
-        const userData = this.props.userData;
+        // const userData = this.props.userData;
+        const userData = window.userData;
 
         let queryParams = {
             method: 'getNewList2',
@@ -215,7 +224,9 @@ export default class VideoList extends Component {
                 this.processVideoListData(data);
                 this.setState({
                     loading: false,
+                    infoPanelVisible: false,
                 });
+                this.props.onListChange();
             },
             fail: err => console.log(err)
         });
@@ -226,7 +237,8 @@ export default class VideoList extends Component {
             curPageNum: pageNum,
         });
         let numPerPage = this.state.numPerPage;
-        const userData = this.props.userData;
+        // const userData = this.props.userData;
+        const userData = window.userData;
         let BASE_URL = this.props.BASE_URL;
         let queryParams = {
             method: 'searchByTitle2',
@@ -255,7 +267,8 @@ export default class VideoList extends Component {
             loading: true
         });
         let BASE_URL = this.props.BASE_URL;
-        let userData = this.props.userData;
+        // let userData = this.props.userData;
+        let userData = window.userData;
         let queryParams = {
             method: 'getById2',
             userid: userData.userid,
@@ -280,15 +293,13 @@ export default class VideoList extends Component {
     componentWillReceiveProps(nextProps) {
         let {
             videoListIsClicked,
-            userData,
+            // userData,
         } = nextProps;
-        if (videoListIsClicked && userData) {
+        if (videoListIsClicked && window.userData) {
             this.fetchVideoList(1);
         }
-        this.setState({
-            infoPanelVisible: !videoListIsClicked,
-        });
     }
+
     componentDidUpdate() {
         this.tableWrapNode.scrollTop = 0;
     }
@@ -302,9 +313,10 @@ export default class VideoList extends Component {
             sysInfo,
             videoListTableData,
             pageStatus,
+            editStatus,
         } = this.state;
         let {
-            userData,
+            // userData,
             BASE_URL,
         } = this.props;
 
@@ -319,8 +331,9 @@ export default class VideoList extends Component {
                 }
             },
             videoInfo,
-            userData,
+            // userData,
             BASE_URL,
+            editStatus,
         };
         let searchBarProps = {
             searchKeyword,
@@ -356,9 +369,9 @@ export default class VideoList extends Component {
                 </div>
                 <div className="panel">
                     <div className="loading" style={{display: loading ? 'block' : 'none'}}>
-                        <img src="http://localhost:8088/assets/img/loading.gif" alt="加载中"/>
+                        <img src="/assets/img/loading.gif" alt="加载中..."/>
                     </div>
-                    <div className="sysInfo" style={{display: sysInfo.trim() !== '' ? 'block' : 'none'}}>
+                    <div className="videoListSysInfo" style={{display: sysInfo.trim() !== '' ? 'block' : 'none'}}>
                         <p>{sysInfo}</p>
                     </div>
                     <div className="listPanel" style={{display: !infoPanelVisible ? 'block' : 'none'}}>
@@ -381,5 +394,5 @@ export default class VideoList extends Component {
 VideoList.propTypes = {
     videoListIsClicked: PropTypes.bool,
     BASE_URL: PropTypes.object,
-    userData: PropTypes.object,
+    // userData: PropTypes.object,
 };

@@ -42,7 +42,7 @@ module.exports = {
             include: APP_PATH,
             loader: 'babel-loader',
             query: {
-                presets: ['stage-0', 'react']
+                presets: ['react', 'es2015']
             }
         }, {
             test: /\.(png|jpg|woff|svg|gif|ttf|eot)$/,

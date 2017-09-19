@@ -7,6 +7,7 @@ import Select from '../../components/Select/Select';
 import Button from '../../components/Button/Button';
 import Table from '../../components/Table/Table';
 import UploadButton from '../../components/UploadButton/UploadButton';
+import Confirm from '../../components/Confirm/Confirm';
 
 import TitleTd from './titleTd';
 import DescTd from './descTd';
@@ -25,10 +26,12 @@ export default class UploadList extends Component {
 
         this.handleUploadBtnChange = this.handleUploadBtnChange.bind(this);
         this.handleTagChange = this.handleTagChange.bind(this);
+        this.handleLupingChange = this.handleLupingChange.bind(this);
         this.handleEmptyClick = this.handleEmptyClick.bind(this);
         this.handlePauseClick = this.handlePauseClick.bind(this);
         this.handleUploadClick = this.handleUploadClick.bind(this);
         this.handleSelectCategoryChange = this.handleSelectCategoryChange.bind(this);
+        this.handleConfirmEmptyClick = this.handleConfirmEmptyClick.bind(this);
 
         this.state = {
             files: [],
@@ -42,6 +45,7 @@ export default class UploadList extends Component {
             speedValue: '0.0 kb/s',
             totalBytesUploaded: 0,
             totalBytesTotal: 0,
+            confirmVisible: false,
         };
 
         this.uploadProgress = {
@@ -84,7 +88,8 @@ export default class UploadList extends Component {
 
             utils.sendMsg({
                 type: 'FILE_CANCEL',
-                data: delFile
+                data: delFile,
+                url: window.userData.url
             });
 
             if (files.length <= this.state.curIndex) {
@@ -164,7 +169,8 @@ export default class UploadList extends Component {
                     bytesTotal: total,
                     totalBytesUploaded: totalBytesUploaded,
                     totalBytesTotal: this.state.totalBytesTotal,
-                }
+                },
+                url: window.userData.url
             });
 
             this.setState({
@@ -176,7 +182,8 @@ export default class UploadList extends Component {
             let files = this.state.files.slice();
             utils.sendMsg({
                 type: 'FILE_COMPLETE',
-                data: files[curIndex]
+                data: files[curIndex],
+                url: window.userData.url
             });
             this.uploadProgress.totalBytesFinished += files[curIndex].size;
             curIndex++;
@@ -190,6 +197,7 @@ export default class UploadList extends Component {
                         uploadsSuccessful: files,
                         uploadsErrored: [],
                     },
+                    url: window.userData.url
                 });
                 uploadStatus = 0;
             }
@@ -203,14 +211,15 @@ export default class UploadList extends Component {
 
         utils.sendMsg({
             type: 'UPLOAD_START',
-            data: file
+            data: file,
+            url: window.userData.url
         });
 
         let {
             cataid,
             tag
         } = this.state.fileOptions;
-        let userData = this.props.userData;
+        let userData = window.userData;
 
         let options = {
             endpoint: uploadServer,
@@ -231,6 +240,15 @@ export default class UploadList extends Component {
 
             progress: progress.bind(this, curIndex),
             done: done.bind(this),
+            fail: err => {
+                utils.sendMsg({
+                    type: 'FILE_FAIL',
+                    data: {
+                        data: err
+                    },
+                    url: window.userData.url
+                });
+            }
         };
         polyv.upload(file, options);
         // polyv = new ResumableUpload(file, options);
@@ -255,7 +273,8 @@ export default class UploadList extends Component {
 
             utils.sendMsg({
                 type: 'FILE_SELECT',
-                data: file
+                data: file,
+                url: window.userData.url
             });
             totalBytesTotal += file.size;
         });
@@ -280,19 +299,39 @@ export default class UploadList extends Component {
             fileOptions,
         });
     }
-    handleEmptyClick() {
-        utils.sendMsg({
-            type: 'CLEAR_QUEUE',
-            data: this.state.files,
-        });
-
+    handleLupingChange(e) {
+        let fileOptions = Object.assign({}, this.state.fileOptions);
+        fileOptions.luping = e.target.value ? '1' : '0';
         this.setState({
-            files: [],
-            curIndex: 0,
-            uploadStatus: 0,
-            totalBytesTotal: 0,
-            totalBytesUploaded: 0,
+            fileOptions,
         });
+    }
+    handleEmptyClick() {
+        this.setState({
+            confirmVisible: true,
+        });
+    }
+    handleConfirmEmptyClick(isConfirmed) {
+        if (isConfirmed) {
+            utils.sendMsg({
+                type: 'CLEAR_QUEUE',
+                data: this.state.files,
+                url: window.userData.url
+            });
+
+            this.setState({
+                files: [],
+                curIndex: 0,
+                uploadStatus: 0,
+                totalBytesTotal: 0,
+                totalBytesUploaded: 0,
+                confirmVisible: false,
+            });
+        } else {
+            this.setState({
+                confirmVisible: false,
+            });
+        }
     }
     handlePauseClick() {
         let uploadStatus = this.state.uploadStatus;
@@ -342,6 +381,7 @@ export default class UploadList extends Component {
 
     render() {
         let {
+            confirmVisible,
             fileOptions,
             uploadStatus,
             files,
@@ -365,9 +405,9 @@ export default class UploadList extends Component {
                     <UploadButton 
                         disabled={uploadStatus === 2}
                         value='选择文件' name='selectFiles' multiple={true} className='btn'
-                        accept='application/vnd.rn-realmedia-vbr,video/x-matroska,video/quicktime,video/mp4,video/x-flv,video/video/x-matroska,video/*,audio/*'
+                        accept='video/avi,.avi,.f4v,video/mpeg,.mpg,video/mp4,.mp4,video/x-flv,.flv,video/x-ms-wmv,.wmv,video/quicktime,.mov,video/3gpp,.3gp,.rmvb,video/x-matroska,.mkv,.asf,.264,.ts,.mts,.dat,.vob,audio/mpeg,.mp3,audio/x-wav,.wav,video/x-m4v,.m4v,video/webm,.webm,.mod'
                         onChange={this.handleUploadBtnChange} />
-                    <Select defaultText='选择分类'
+                    <Select defaultText='默认分类'
                         disabled={uploadStatus > 1}
                         options= {cataOptions}
                         className='btn'
@@ -383,8 +423,13 @@ export default class UploadList extends Component {
                     <Button value={uploadStatus === 3 ? '继续':'暂停'} className="btn" 
                         onClick={this.handlePauseClick} 
                         visible={uploadStatus > 1} />
-                    <span style={{display: uploadStatus > 1 ? 'inline' : 'none'}}
+                    <span style={{display: uploadStatus === 2 ? 'inline' : 'none'}}
                         className="speed">{speedValue}</span>
+                    <span>
+                        <input type="checkbox" name="luping" id="luping" checked
+                            onChange={this.handleLupingChange} />
+                        <label htmlFor="luping">进行视频课件优化处理</label>
+                    </span>
                     <Button id="uploadFile" value="上传" className="btn upload" 
                         onClick={this.handleUploadClick} 
                         disabled={uploadStatus !== 1} />
@@ -392,6 +437,7 @@ export default class UploadList extends Component {
                 <div className="fileList">
                     <Table tbodyData={tbodyData} onTdClick={this.handleTdClick} />
                 </div>
+                <Confirm visible={confirmVisible} onClick={this.handleConfirmEmptyClick} confirmInfo="确认清空上传列表？" />
             </div>
         );
     }
@@ -399,6 +445,6 @@ export default class UploadList extends Component {
 UploadList.speedTimer = null;
 UploadList.propTypes = {
     BASE_URL: PropTypes.object,
-    userData: PropTypes.object,
+    // userData: PropTypes.object,
     cataOptions: PropTypes.object,
 };

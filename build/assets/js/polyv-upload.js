@@ -1,22 +1,7 @@
 /**
- *  上传参数options：
- *  sign: 根据将secretkey和13位的毫秒级时间戳按照顺序拼凑起来的字符串进行MD5计算得到的值
- *  userid: 
- *  hash: 根据将13位的毫秒级时间戳和writeToken按照顺序拼凑起来的字符串进行MD5计算得到的值
- *  ts
- *  cataid: 上传目录id
- *  luping(optional): 开启视频课件优化处理，对于上传录屏类视频清晰度有所优化；
- *  extra(optional): 
- *  {
- *      state, // 自定义参数，可以通过回调通知接口抓取到该字段
- *      keepsource, // 源文件播放（不对源文件进行编码）
- *  }
- *  response(optional): function，返回指定视频的信息时的回调函数
- *  
- *  方法：
- *  update(data): 用于更新ts、hash、sign3个信息
- *  closeWrap(): 关闭插件
- **/
+ * 用于向用户提供接口
+ * @param {object} options 用户可以自行设置的参数
+ */
 function PolyvUpload(options) {
     this.options = {
         sign: options.sign,
@@ -32,7 +17,8 @@ function PolyvUpload(options) {
         openWrap: options.openWrap,
         onCancle: options.onCancle,
         onClearQueue: options.onClearQueue,
-        onQueueComplete: options.onQueueComplete,
+        uploadSuccess: options.uploadSuccess,
+        uploadFail: options.uploadFail,
         onSelect: options.onSelect,
         onUploadComplete: options.onUploadComplete,
         onUploadProgress: options.onUploadProgress,
@@ -40,13 +26,11 @@ function PolyvUpload(options) {
     };
     this.uploadButton = document.getElementById(options.uploadButtton);
     // this.url = 'http://localhost:9090';
-    this.url = 'http://localhost:8088/upload-webpack-react/build/index.html';
+    this.url = 'http://192.168.1.123:8088/upload-webpack-react/build/index.html';
+
     // this.url = 'http://localhost:8088/build/index.html';
-    // this.url = 'http://localhost:8088/upload-webpack-react/build/index.html';
+    // this.url = 'http://192.168.1.123:8088/upload-webpack-react/build/index.html';
     this._init();
-    // if (options.response !== undefined) {
-    //     this._handleMsgReceive(options.response);
-    // }
 }
 PolyvUpload.prototype = {
     constructor: PolyvUpload,
@@ -124,8 +108,13 @@ PolyvUpload.prototype = {
                     }
                     break;
                 case 'QUEUE_COMPLETE':
-                    if (typeof self.options.onQueueComplete === 'function') {
-                        self.options.onQueueComplete(msgData.data);
+                    if (typeof self.options.uploadSuccess === 'function') {
+                        self.options.uploadSuccess(msgData.data);
+                    }
+                    break;
+                case 'QUEUE_FAIL': // todo:
+                    if (typeof self.options.uploadFail === 'function') {
+                        self.options.uploadFail(msgData.data);
                     }
                     break;
                 case 'FILE_CANCEL':
@@ -143,15 +132,18 @@ PolyvUpload.prototype = {
                         self.options.onUploadComplete(msgData.data);
                     }
                     break;
+                case 'FILE_FAIL':
+                    if (typeof self.options.uploadFail === 'function') {
+                        self.options.uploadFail(msgData.data);
+                    }
+                    break;
                 case 'FILE_PROGRESS':
                     if (typeof self.options.onUploadProgress === 'function') {
-                        let {
-                            file,
-                            bytesUploaded,
-                            bytesTotal,
-                            totalBytesUploaded,
-                            totalBytesTotal
-                        } = msgData.data;
+                        var file = msgData.data.file,
+                            bytesUploaded = msgData.data.bytesUploaded,
+                            bytesTotal = msgData.data.bytesTotal,
+                            totalBytesUploaded = msgData.data.totalBytesUploaded,
+                            totalBytesTotal = msgData.data.totalBytesTotal;
                         self.options.onUploadProgress(file, bytesUploaded, bytesTotal, totalBytesUploaded, totalBytesTotal);
                     }
                     break;

@@ -61,7 +61,7 @@ export default class Select extends Component {
             className,
         } = this.props;
 
-        const text = value === '' ? defaultText : options[value];
+        let text = value === '' ? defaultText : options[value].replace(/^(-- )*/g, '');
         let wrapClassName = classnames('btn-select', {
             'hide': !visible,
             'disabled': disabled,

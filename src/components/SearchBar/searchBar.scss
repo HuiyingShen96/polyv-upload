@@ -1,44 +1,55 @@
 $fontSize: 14px;
 $searchBtnWid: 4em;
 $borderRadius: 3px;
-.searchBar{
-	display: inline-block;
-	width: 20em;
-	height: 4ex;
-	position: relative;
-	font-size: $fontSize;
-	margin: 0 8px;
-}
-.inputBox{
-	box-sizing: border-box;
-	display: inline-block;
-	width: 100%;
-	height: 100%;
-	padding: .5ex .5em;
-	border: 1px solid #eee;
-	font-size: $fontSize;
-	border-radius: $borderRadius;
+$btnColor: #4f94fa;
+.searchBar {
+  display: inline-block;
 
-	&:focus{
-		border-color: #66afe9;
-		outline: 0;
-		-webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102,175,233,.6);
-		box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102,175,233,.6);
-	}
+  position: relative;
+
+  margin: 0 8px;
+  width: 20em;
+  height: 4ex;
+
+  font-size: $fontSize;
 }
-.searchBtn{
-	display: inline-block;
-	position: absolute;
-	top: 0;
-	right: 0;
-	width: $searchBtnWid;
-	height: 100%;
-	font-size: $fontSize;
-	background-color: #4f94fa;
-	border-radius: 0 $borderRadius $borderRadius 0;
-	color: #fff;
-	border: none;
-	&:hover{
-		cursor: pointer;
-	}
+.inputBox {
+  display: inline-block;
+
+  box-sizing: border-box;
+  border: 1px solid #eee;
+  border-radius: $borderRadius;
+  padding: 0.5ex 0.5em;
+  width: 100%;
+  height: 100%;
+
+  font-size: $fontSize;
+  &:focus {
+    border-color: #66afe9;
+
+    outline: 0;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,0.075), 0 0 8px rgba(102,175,233,0.6);
+            box-shadow: inset 0 1px 1px rgba(0,0,0,0.075), 0 0 8px rgba(102,175,233,0.6);
+  }
+}
+.searchBtn {
+  display: inline-block;
+
+  position: absolute;
+  top: 0;
+  right: 0;
+
+  border: none;
+  border: 1px solid $btnColor;
+  border-radius: 0 $borderRadius $borderRadius 0;
+  width: $searchBtnWid;
+  height: 100%;
+
+  font-size: $fontSize;
+
+  color: #fff;
+  background-color: $btnColor;
+  &:hover {
+    cursor: pointer;
+  }
 }

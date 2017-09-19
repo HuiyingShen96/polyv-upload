@@ -6,11 +6,6 @@ import PropTypes from 'prop-types';
 import classnames from 'classnames';
 
 export default class TabNav extends Component {
-    static propTypes = {
-        classPrefix: PropTypes.string,
-        panels: PropTypes.node,
-        activeIndex: PropTypes.number,
-    };
     getTabs() {
         const {
             panels,
@@ -81,3 +76,8 @@ export default class TabNav extends Component {
         );
     }
 }
+TabNav.propTypes = {
+    classPrefix: PropTypes.string,
+    panels: PropTypes.node,
+    activeIndex: PropTypes.number,
+};

@@ -16,6 +16,7 @@ $borderRadius: 3px;
     position: relative;
     font-size: $fontSize;
     overflow: hidden;
+    border: 1px solid #4f94fa;
 
     &.disabled{
     	opacity: .5;

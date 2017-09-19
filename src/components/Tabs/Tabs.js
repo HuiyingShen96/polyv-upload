@@ -30,7 +30,7 @@ export default class Tabs extends Component {
         if ('activeIndex' in nextProps) {
             this.setState({
                 activeIndex: nextProps.activeIndex
-            })
+            });
         }
     }
 

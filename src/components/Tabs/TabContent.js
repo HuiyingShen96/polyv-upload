@@ -6,11 +6,6 @@ import PropTypes from 'prop-types';
 import classnames from 'classnames';
 
 export default class TabContent extends Component {
-    static propTypes = {
-        classPrefix: PropTypes.string,
-        panels: PropTypes.node,
-        activeIndex: PropTypes.number,
-    };;
     getTabPanes() {
         const {
             classPrefix,
@@ -51,3 +46,8 @@ export default class TabContent extends Component {
         );
     }
 }
+TabContent.propTypes = {
+    classPrefix: PropTypes.string,
+    panels: PropTypes.node,
+    activeIndex: PropTypes.number,
+};

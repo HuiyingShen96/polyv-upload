@@ -20,14 +20,13 @@ export default class TitleTd extends Component {
             inputBoxVisible: false,
         };
     }
-    handleClick(e) {
+    handleClick() {
         if (this.props.uploading) {
             return;
         }
         this.setState({
             inputBoxVisible: true,
         });
-        e.currentTarget.getElementsByTagName('input')[0].focus();
     }
     handleChange(e) {
         this.setState({
@@ -70,19 +69,19 @@ export default class TitleTd extends Component {
         title = title.replace(/\.\w+$/, '');
 
         return (
-            <span>
-                <span style={{display: inputBoxVisible ? 'none': 'inline-block'}}>
-                    <span>{title}</span>
+            <div>
+                <div style={{display: inputBoxVisible ? 'none': 'block'}}>
+                    <div className="fileTitle">{title}</div>
                     <i onClick={this.handleClick} className="fa fa-pencil" aria-hidden="true"
                         style={{visibility: uploading ? 'hidden' : 'visible'}}></i>
-                </span>
+                </div>
                 <input type='text' value={title} disabled={uploading ? 'disabled' : false}
                     ref={node => {this.inputBox = node;}}
                     style={{display: inputBoxVisible?'inline-block': 'none'}}
                     onChange={this.handleChange} 
                     onBlur={this.handleBlur}
                     onKeyPress={this.handleKeyPress} />
-			</span>
+			</div>
         );
     }
 }

@@ -4,72 +4,93 @@ $btnHeight: 4ex;
 $borderRadius: 3px;
 $minWidth: 4em;
 .btn-select {
-    display: inline-block;
-    min-width: $minWidth;
-    height: $btnHeight;
-    line-height: $btnHeight;
-    text-align: center;
-    vertical-align: top;
-    border: none;
-    outline: none;
-    background: none;
-    color: #fff;
-    background-color: $btnColor;
+  display: inline-block;
+
+  position: relative;
+
+  border: none;
+  border: 1px solid $btnColor;
+  border-radius: $borderRadius;
+  padding: 0 1em;
+  min-width: $minWidth;
+  height: $btnHeight;
+
+  font-size: $btnFontSize;
+  line-height: $btnHeight;
+  text-align: center;
+  vertical-align: top;
+
+  color: #fff;
+  background: none;
+  background-color: $btnColor;
+
+  outline: none;
+
+  cursor: pointer;
+  .fa-caret-down {
+    margin-left: 10px;
+  }
+  &.hide {
+    display: none;
+  }
+  .content {
+    display: none;
+    overflow-y: auto;
+
+    position: absolute;
+    top: $btnHeight;
+    left: 0;
+
+    margin: 5px 0 0;
+    border: 1px solid rgba(0,0,0,0.15);
     border-radius: $borderRadius;
-    padding: 0 1em;
+    padding: 5px 0;
+    min-width: 100%;
+    max-height: 400px;
+
+    color: gray;
+    background-color: #fff;
+
+    box-shadow: 0 6px 12px rgba(0,0,0,0.175);
+  }
+  li {
+    display: block;
+    overflow-x: hidden;
+
+    list-style: none;
+
+    padding: 5px 10px;
+    max-width: 150px;
+
+    line-height: 2ex;
+    text-align: left;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
     cursor: pointer;
-    font-size: $btnFontSize;
-    position: relative;
-
-    .fa-caret-down {
-        margin-left: 10px;
-    }
-
-    &.hide{
-        display: none;
-    }
-
-    .content{
-        display: none;
-        position: absolute;
-        left: 0;
-        top: $btnHeight;
-        min-width: 100%;
-        margin: 5px 0 0;
-        padding: 5px 0;
-        color: gray;
-        border: 1px solid rgba(0,0,0,.15);
-        border-radius: $borderRadius;
-        box-shadow: 0 6px 12px rgba(0,0,0,.175);
-        background-color: #fff;
-    }
-
-    li{
-        list-style: none;
-        text-align: left;
-        padding: 5px 10px;
-        line-height: 2ex;
-        cursor: pointer;
-
-        &:hover{
-            background-color: #f5f5f5;
-        }
-    }
-
-    &.focus{
-        background-color: transparentize($btnColor, 0.15);
-        .content{
-            display: block;
-        }
-    }
-
     &:hover {
-        background-color: transparentize($btnColor, 0.15);
-        color: #fff;
+      background-color: #f5f5f5;
     }
+  }
+  &.focus {
+    border-color: transparentize($btnColor, 0.15);
 
-    &.disabled {
-        background-color: transparentize($btnColor, 0.5);
-        cursor: default;
+    background-color: transparentize($btnColor, 0.15);
+    .content {
+      display: block;
     }
+  }
+  &:hover {
+    border-color: transparentize($btnColor, 0.15);
+
+    color: #fff;
+    background-color: transparentize($btnColor, 0.15);
+  }
+  &.disabled {
+    border-color: transparentize($btnColor, 0.5);
+
+    background-color: transparentize($btnColor, 0.5);
+
+    cursor: default;
+  }
 }
