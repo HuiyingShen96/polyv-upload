@@ -57,7 +57,7 @@ export default class VideoList extends Component {
         let tbodyData = [];
         videoList.map(vInfo => {
             tbodyData.push({
-                thumbnail: <img src={vInfo.first_image} alt={vInfo.title}/>,
+                thumbnail: <img src={vInfo.first_image} />,
                 title: <div className="titleWrap" title={vInfo.title}>{vInfo.title}</div>,
                 duration: vInfo.duration,
                 status: utils.transformStatus(vInfo.status),
@@ -205,7 +205,6 @@ export default class VideoList extends Component {
             loading: true,
             curPageNum: pageNum,
         });
-        // const userData = this.props.userData;
         const userData = window.userData;
 
         let queryParams = {
@@ -214,6 +213,7 @@ export default class VideoList extends Component {
             ts: userData.ts,
             sign: userData.sign,
             pageNum,
+            catatree: userData.catatree,
             numPerPage: this.numPerPage,
         };
 
@@ -331,7 +331,6 @@ export default class VideoList extends Component {
                 }
             },
             videoInfo,
-            // userData,
             BASE_URL,
             editStatus,
         };

@@ -2,7 +2,8 @@ $btnColor: #4f94fa;
 $btnFontSize: 14px;
 $btnHeight: 4ex;
 $borderRadius: 3px;
-$minWidth: 4em;
+$minWidth: 84px;
+$maxWidth: 100px;
 .btn-select {
   display: inline-block;
 
@@ -11,8 +12,9 @@ $minWidth: 4em;
   border: none;
   border: 1px solid $btnColor;
   border-radius: $borderRadius;
-  padding: 0 1em;
+  padding: 0 16px 0 8px;
   min-width: $minWidth;
+  max-width: $maxWidth;
   height: $btnHeight;
 
   font-size: $btnFontSize;
@@ -27,8 +29,28 @@ $minWidth: 4em;
   outline: none;
 
   cursor: pointer;
+  .title {
+    height: 100%;
+  }
+  .titleContent {
+    display: block;
+    overflow: hidden;
+
+    min-width: 60px;
+    max-width: 76px;
+    height: 100%;
+
+    text-align: center;
+    text-overflow: ellipsis;
+  }
   .fa-caret-down {
-    margin-left: 10px;
+    position: absolute;
+    top: 0;
+    right: 7px;
+
+    width: 8px;
+
+    line-height: $btnHeight;
   }
   &.hide {
     display: none;

@@ -18,7 +18,7 @@ $fontSize: 14px;
     margin-bottom: 15px;
     border-bottom: 1px solid #eee;
     padding-bottom: 15px;
-    >.btn {
+    >.btn-group-element {
       margin-right: 5px;
     }
     input[type=text] {
@@ -41,7 +41,7 @@ $fontSize: 14px;
       }
     }
     .speed {
-      padding: 0 15px;
+      padding: 0 10px;
     }
     .upload {
       float: right;

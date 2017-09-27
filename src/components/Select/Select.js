@@ -14,6 +14,7 @@ export default class Select extends Component {
 
         this.state = {
             defaultText: this.props.defaultText,
+            text: this.props.text,
             focus: false,
             value: '',
         };
@@ -51,7 +52,7 @@ export default class Select extends Component {
         const {
             defaultText,
             focus,
-            value,
+            // value,
         } = this.state;
         const {
             options,
@@ -59,9 +60,10 @@ export default class Select extends Component {
             disabled,
             visible,
             className,
+            text,
         } = this.props;
 
-        let text = value === '' ? defaultText : options[value].replace(/^(-- )*/g, '');
+        let title = text === '' ? defaultText : text.replace(/^(-- )*/g, '');
         let wrapClassName = classnames('btn-select', {
             'hide': !visible,
             'disabled': disabled,
@@ -70,7 +72,10 @@ export default class Select extends Component {
 
         return (
             <div className={wrapClassName}>
-                <div className="title" onClick={this.handleTitleClick}>{text}<i className="fa fa-caret-down" aria-hidden="true"></i></div>
+                <div className="title" onClick={this.handleTitleClick}>
+                    <div className="titleContent">{title}</div>
+                    <i className="fa fa-caret-down" aria-hidden="true"></i>
+                </div>
                 <div className="content">
                     <ul>
                         {options && Object.keys(options).map((key, index) => { 
@@ -98,6 +103,8 @@ Select.propTypes = {
     disabled: PropTypes.bool,
     visible: PropTypes.bool,
     className: PropTypes.string,
+    defaultText: PropTypes.string,
+    text: PropTypes.string,
 };
 Select.defaultProps = {
     value: '',
@@ -107,4 +114,6 @@ Select.defaultProps = {
     disabled: false,
     visible: true,
     className: '',
+    defaultText: '默认分类',
+    text: '',
 };

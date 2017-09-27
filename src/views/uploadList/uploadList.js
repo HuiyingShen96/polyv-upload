@@ -8,6 +8,7 @@ import Button from '../../components/Button/Button';
 import Table from '../../components/Table/Table';
 import UploadButton from '../../components/UploadButton/UploadButton';
 import Confirm from '../../components/Confirm/Confirm';
+import SysInfo from '../../components/SysInfo/SysInfo';
 
 import TitleTd from './titleTd';
 import DescTd from './descTd';
@@ -39,13 +40,14 @@ export default class UploadList extends Component {
             uploadStatus: 0, // 上传状态（0:等待 1:就绪 2:执行 3:暂停）
 
             fileOptions: {
-                cataid: 1,
+                cataid: -1,
                 tag: '',
             },
             speedValue: '0.0 kb/s',
             totalBytesUploaded: 0,
             totalBytesTotal: 0,
             confirmVisible: false,
+            sysInfo: '',
         };
 
         this.uploadProgress = {
@@ -188,6 +190,8 @@ export default class UploadList extends Component {
             this.uploadProgress.totalBytesFinished += files[curIndex].size;
             curIndex++;
             let uploadStatus = this.state.uploadStatus;
+            let sysInfo = '';
+
             if (curIndex < files.length) {
                 this.uploadFile(files[curIndex], curIndex);
             } else {
@@ -199,6 +203,7 @@ export default class UploadList extends Component {
                     },
                     url: window.userData.url
                 });
+                sysInfo = '上传成功！';
                 uploadStatus = 0;
             }
 
@@ -206,7 +211,15 @@ export default class UploadList extends Component {
                 uploadStatus,
                 files,
                 curIndex,
+                sysInfo,
             });
+            if (sysInfo) {
+                setTimeout(() => {
+                    this.setState({
+                        sysInfo: ''
+                    });
+                }, 2000);
+            }
         }
 
         utils.sendMsg({
@@ -219,6 +232,9 @@ export default class UploadList extends Component {
             cataid,
             tag
         } = this.state.fileOptions;
+        cataid = cataid < 0 ? window.userData.cataid || '1' : cataid;
+        console.log('cataid: ', cataid);
+
         let userData = window.userData;
 
         let options = {
@@ -231,7 +247,7 @@ export default class UploadList extends Component {
             userid: userData.userid,
             luping: userData.luping,
             extra: userData.extra,
-            cataid: cataid,
+            cataid,
 
             tag: tag,
             title: file.title,
@@ -379,6 +395,14 @@ export default class UploadList extends Component {
         });
     }
 
+    // componetWillUpdate(nextProps){
+    //     let fileOptions = Object.assign({}, this.state.fileOptions);
+    //     fileOptions.cataid = value;
+    //     this.setState({
+    //         fileOptions: 
+    //     });
+    // }
+
     render() {
         let {
             confirmVisible,
@@ -386,6 +410,7 @@ export default class UploadList extends Component {
             uploadStatus,
             files,
             speedValue,
+            sysInfo,
         } = this.state;
         let {
             cataOptions,
@@ -399,38 +424,49 @@ export default class UploadList extends Component {
         let tbodyData = this.getTbodyData(files);
         let tag = fileOptions.tag;
 
+        let sysInfoVisiable = !!sysInfo;
+
+        let cataid = '';
+        if (fileOptions.cataid > -1) {
+            cataid = fileOptions.cataid;
+        } else if (window.userData) {
+            cataid = window.userData.cataid;
+        }
+        let selectTitleText = cataOptions && cataid && cataOptions[cataid] || '';
+
         return (
             <div id='uploadList'>
                 <div className="btn-group">
                     <UploadButton 
                         disabled={uploadStatus === 2}
-                        value='选择文件' name='selectFiles' multiple={true} className='btn'
+                        value='选择文件' name='selectFiles' multiple={true} 
+                        className="btn-group-element"
                         accept='video/avi,.avi,.f4v,video/mpeg,.mpg,video/mp4,.mp4,video/x-flv,.flv,video/x-ms-wmv,.wmv,video/quicktime,.mov,video/3gpp,.3gp,.rmvb,video/x-matroska,.mkv,.asf,.264,.ts,.mts,.dat,.vob,audio/mpeg,.mp3,audio/x-wav,.wav,video/x-m4v,.m4v,video/webm,.webm,.mod'
                         onChange={this.handleUploadBtnChange} />
-                    <Select defaultText='默认分类'
+                    <Select text={selectTitleText}
                         disabled={uploadStatus > 1}
                         options= {cataOptions}
-                        className='btn'
+                        className="btn-group-element"
                         onChange={this.handleSelectCategoryChange} />
-                    <input className="btn" type="text" name="tag"
+                    <input className="btn-group-element" type="text" name="tag"
                         disabled={uploadStatus > 1}
                         onChange={this.handleTagChange}
                         value={tag}
                         placeholder='标签 用" , "分隔' />
-                    <Button value="清空" className="btn" 
+                    <Button value="清空" className="btn-group-element" 
                         disabled={uploadStatus === 2}
                         onClick={this.handleEmptyClick} />
-                    <Button value={uploadStatus === 3 ? '继续':'暂停'} className="btn" 
+                    <Button value={uploadStatus === 3 ? '继续':'暂停'} className="btn-group-element" 
                         onClick={this.handlePauseClick} 
                         visible={uploadStatus > 1} />
                     <span style={{display: uploadStatus === 2 ? 'inline' : 'none'}}
-                        className="speed">{speedValue}</span>
-                    <span>
+                        className="speed btn-group-element">{speedValue}</span>
+                    <span className="btn-group-element">
                         <input type="checkbox" name="luping" id="luping" checked
                             onChange={this.handleLupingChange} />
                         <label htmlFor="luping">进行视频课件优化处理</label>
                     </span>
-                    <Button id="uploadFile" value="上传" className="btn upload" 
+                    <Button id="uploadFile" value="上传" className="btn-group-element upload" 
                         onClick={this.handleUploadClick} 
                         disabled={uploadStatus !== 1} />
                 </div>
@@ -438,6 +474,7 @@ export default class UploadList extends Component {
                     <Table tbodyData={tbodyData} onTdClick={this.handleTdClick} />
                 </div>
                 <Confirm visible={confirmVisible} onClick={this.handleConfirmEmptyClick} confirmInfo="确认清空上传列表？" />
+                <SysInfo visible={sysInfoVisiable} sysInfo={sysInfo}  />
             </div>
         );
     }

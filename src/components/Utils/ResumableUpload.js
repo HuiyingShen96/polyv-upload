@@ -8,8 +8,13 @@ export default class ResumableUpload {
             this._start();
         }
     }
-    fingerprint(file, title) {
-        return `polyv-${title}-${file.type}-${file.size}`;
+    fingerprint(file, title, {
+        userid,
+        cataid
+    }) {
+        console.log(`polyv-${userid}-${cataid}-${title}-${file.type}-${file.size}`);
+
+        return `polyv-${userid}-${cataid}-${title}-${file.type}-${file.size}`;
     }
     stop() {
         if (this.uploadRequest) {
@@ -23,15 +28,21 @@ export default class ResumableUpload {
     }
 
     _init(file, options) {
+        let userid = options.userid,
+            cataid = options.cataid;
+
         this.file = file;
         this.options = {
             endpoint: options.endpoint,
-            fingerprint: options.fingerprint || this.fingerprint(file, options.title),
+            fingerprint: options.fingerprint || this.fingerprint(file, options.title, {
+                userid,
+                cataid
+            }),
             resumable: options.resumable || !options.resetBefore, // 默认为true
             resetBefore: options.resetBefore || false,
             resetAfter: options.resetAfter || true,
 
-            cataid: options.cataid,
+            cataid: cataid,
             desc: options.desc,
             ext: options.ext,
             extra: options.extra,
@@ -41,7 +52,7 @@ export default class ResumableUpload {
 
             ts: options.ts,
             hash: options.hash,
-            userid: options.userid,
+            userid: userid,
         };
         this.progress = options.progress;
         this.done = options.done;

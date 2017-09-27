@@ -299,7 +299,11 @@ export default class Utils {
             let k = 1024;
             let sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
             let i = Math.floor(Math.log(bt) / Math.log(k));
-            result = (bt / Math.pow(k, i)).toFixed(2) + sizes[i];
+            if (typeof i !== 'number') {
+                result = '-';
+            } else {
+                result = (bt / Math.pow(k, i)).toFixed(2) + sizes[i];
+            }
         }
         return result;
     }

@@ -39,9 +39,10 @@ class UploadModal extends Component {
                 userid: userData.userid
             },
             done: data => {
-                let options = {
-                    '1': '默认分类'
-                };
+                let options = {};
+                if (userData.cataid.toString() === '1') {
+                    options[1] = '默认分类';
+                }
                 var minLen = data[0].catatree.match(/,/g).length - 1;
                 data.forEach(ele => {
                     let level = ele.catatree.match(/,/g).length - 1 - minLen;
@@ -52,6 +53,7 @@ class UploadModal extends Component {
 
                     options[ele.cataid] = levelStr + ele.cataname;
                 });
+                window.userData.catatree = window.userData.cataid ? data[0].catatree : '1';
 
                 this.setState({
                     cataOptions: options,
