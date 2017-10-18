@@ -58,4 +58,11 @@ module.exports = {
         // modulesDirectories: ['.']
     },
     plugins: [new webpack.HotModuleReplacementPlugin()],
+    externals: {
+        'OSS': 'window.OSS',
+    }
+    // node: {
+    //     fs: 'empty',
+    //     child_process: 'empty',
+    // },
 };

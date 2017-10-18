@@ -1,15 +1,10 @@
 import Utils from '../../components/Utils/Utils';
-
 let utils = new Utils();
 
 export default class ResumableUpload {
     upload(file, options) {
-        console.log('upload');
-
         this._init(file, options);
         if (file) {
-            console.log('file exist');
-
             this._start();
         }
     }
@@ -17,6 +12,8 @@ export default class ResumableUpload {
         userid,
         cataid
     }) {
+        console.log(`polyv-${userid}-${cataid}-${title}-${file.type}-${file.size}`);
+
         return `polyv-${userid}-${cataid}-${title}-${file.type}-${file.size}`;
     }
     stop() {
@@ -31,8 +28,6 @@ export default class ResumableUpload {
     }
 
     _init(file, options) {
-        console.log('init');
-
         let userid = options.userid,
             cataid = options.cataid;
 
@@ -58,50 +53,25 @@ export default class ResumableUpload {
             ts: options.ts,
             hash: options.hash,
             userid: userid,
-
-            stsInfo: options.stsInfo,
         };
         this.progress = options.progress;
         this.done = options.done;
         this.fail = options.fail;
 
         this.fileUrl = null;
-        this.checkpoint = null;
         this.bytesWritten = null;
         this.uploadRequest = null;
     }
     _start() {
-        console.log('start');
-
-        var options = this.options;
-        var fingerprint = options.fingerprint;
-
-        if (!options.resumable || options.resetBefore) { // disable resumable upload
-            this._removeCheckpoint(fingerprint); // Remove localStorage
+        if (!this.options.resumable || this.options.resetBefore) { // disable resumable upload
+            this._urlCache(false); // Remove localstorage
         }
-        this.checkpoint = this._getCheckpoint(fingerprint); // Get the file upload address from localStorage
-
-        if (typeof this.checkpoint === 'object' && this.checkpoint) {
-            this.checkpoint.file = this.file;
+        this.fileUrl = this._urlCache(); // Get the file upload address from localstorage
+        if (this.fileUrl) { // There is a upload record.
+            this._head();
+        } else {
+            this._post();
         }
-
-        // let ossClient = new OSS.Wrapper(options.stsInfo);
-        // ossClient.multipartUpload(this.file.name, this.file, {
-        //     partSize: 1024 * 1024,
-        //     progress: this.progress,
-        //     checkpoint: this.checkpoint
-        // }).then(function(result) {
-        //     localStorage.setItem(fingerprint, null);
-        //     console.log('upload success: 100% ', result);
-        // }).catch(function(err) {
-        //     console.log(err);
-        // });
-
-        // if (this.fileUrl) { // There is a upload record.
-        //     this._head();
-        // } else {
-        //     this._post();
-        // }
     }
     _post() {
         utils.post({
@@ -212,24 +182,24 @@ export default class ResumableUpload {
         };
         xhr.send(blob);
     }
+    _urlCache(url) {
+        let fingerPrint = this.options.fingerprint;
 
-    // handle checkPoint
-    _getCheckpoint(fingerprint) {
-        var checkpoint = localStorage.getItem(fingerprint);
-        checkpoint = typeof checkpoint === 'string' ? JSON.parse(checkpoint) : null;
-        return checkpoint;
-    }
-    _setCheckpoint(fingerprint, checkpoint) {
-        let result = false;
-        try {
-            result = localStorage.setItem(fingerprint, JSON.stringify(checkpoint));
-        } catch (e) {
-            // most likely quota exceeded error
+        if (url === false) {
+            return localStorage.removeItem(fingerPrint);
         }
-        return result;
-    }
-    _removeCheckpoint(fingerprint) {
-        return localStorage.removeItem(fingerprint);
+
+        if (url) {
+            let result = false;
+            try {
+                result = localStorage.setItem(fingerPrint, url);
+            } catch (e) {
+                // most likely quota exceeded error
+            }
+
+            return result;
+        }
+        return localStorage.getItem(fingerPrint);
     }
 
     _emitProgress(loaded, total) {

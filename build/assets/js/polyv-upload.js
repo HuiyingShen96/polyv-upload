@@ -25,11 +25,11 @@ function PolyvUpload(options) {
         onUploadStart: options.onUploadStart,
     };
     this.uploadButton = document.getElementById(options.uploadButtton);
-    // this.url = 'http://localhost:9090';
-    this.url = 'http://192.168.1.123:8088/upload-webpack-react/build/index.html';
 
-    // this.url = 'http://localhost:8088/build/index.html';
-    // this.url = 'http://192.168.1.123:8088/upload-webpack-react/build/index.html';
+    // 默认使用HTML5方式上传
+    // this.url = 'http://localhost:9090';
+    this.url = '//localhost:8088/upload-webpack-react/build/index.html';
+
     this._init();
 }
 PolyvUpload.prototype = {
@@ -43,9 +43,20 @@ PolyvUpload.prototype = {
             ele['on' + type] = handler;
         }
     },
+    _checkH5Support: function() {
+        var input = document.createElement('input');
+        var fileSupport = !!(window.File && window.FileList);
+        var xhr = new XMLHttpRequest();
+        var fd = !!window.FormData;
+        return 'multiple' in input && fileSupport && 'onprogress' in xhr && 'upload' in xhr && fd;
+    },
 
     _init: function() {
         var self = this;
+
+        if (!this._checkH5Support()) { // 不支持HTML5新特性时使用flash上传
+            this.url = '//v.polyv.net/file/plug-in2/index.html';
+        }
 
         // Build the iframe
         var wrapAll = document.createElement('div'),

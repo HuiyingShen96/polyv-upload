@@ -325,6 +325,9 @@ export default class Utils {
             case '40':
                 status = '编码失败';
                 break;
+            case '41':
+                status = '已删除';
+                break;
             case '50':
                 status = '等待审核';
                 break;

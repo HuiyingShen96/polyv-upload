@@ -21,6 +21,11 @@ let polyv = new ResumableUpload();
 
 let uploadServer = 'http://upload.polyv.net:1080/files/';
 
+let stsInfo = {
+    endpoint: 'oss-cn-shenzhen.aliyuncs.com',
+    bucket: 'polyvupload',
+};
+
 export default class UploadList extends Component {
     constructor(props) {
         super(props);
@@ -233,7 +238,6 @@ export default class UploadList extends Component {
             tag
         } = this.state.fileOptions;
         cataid = cataid < 0 ? window.userData.cataid || '1' : cataid;
-        console.log('cataid: ', cataid);
 
         let userData = window.userData;
 
@@ -266,7 +270,30 @@ export default class UploadList extends Component {
                 });
             }
         };
-        polyv.upload(file, options);
+        if (!stsInfo.accessKeyId) {
+            utils.jsonp({
+                url: '//localhost:8088/sts-server/sts.php',
+                done: function(res) {
+                    console.log(res);
+
+                    res = JSON.parse(res);
+                    console.log(res);
+                    return;
+
+                    // stsInfo.accessKeyId = res.AccessKeyId;
+                    // stsInfo.accessKeySecret = res.AccessKeySecret;
+                    // stsInfo.stsToken = res.SecurityToken;
+
+                    // Object.assign(options.stsInfo, stsInfo);
+                    // polyv.upload(file, options);
+                },
+                fail: function() {
+                    console.log('获取STS信息失败，请刷新重试！');
+                    return;
+                },
+            });
+        }
+
         // polyv = new ResumableUpload(file, options);
     }
 
