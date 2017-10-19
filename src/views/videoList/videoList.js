@@ -368,7 +368,7 @@ export default class VideoList extends Component {
                 </div>
                 <div className="panel">
                     <div className="loading" style={{display: loading ? 'block' : 'none'}}>
-                        <img src="/assets/img/loading.gif" alt="加载中..."/>
+                        <img src="/assets/images/loading.gif" alt="加载中..."/>
                     </div>
                     <div className="videoListSysInfo" style={{display: sysInfo.trim() !== '' ? 'block' : 'none'}}>
                         <p>{sysInfo}</p>

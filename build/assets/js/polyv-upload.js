@@ -27,8 +27,8 @@ function PolyvUpload(options) {
     this.uploadButton = document.getElementById(options.uploadButtton);
 
     // 默认使用HTML5方式上传
-    // this.url = 'http://localhost:9090';
-    this.url = '//localhost:8088/upload-webpack-react/build/index.html';
+    this.url = 'http://localhost:9090';
+    // this.url = 'http://localhost:8088/upload-webpack-react/build/index.html';
 
     this._init();
 }
@@ -151,11 +151,8 @@ PolyvUpload.prototype = {
                 case 'FILE_PROGRESS':
                     if (typeof self.options.onUploadProgress === 'function') {
                         var file = msgData.data.file,
-                            bytesUploaded = msgData.data.bytesUploaded,
-                            bytesTotal = msgData.data.bytesTotal,
-                            totalBytesUploaded = msgData.data.totalBytesUploaded,
-                            totalBytesTotal = msgData.data.totalBytesTotal;
-                        self.options.onUploadProgress(file, bytesUploaded, bytesTotal, totalBytesUploaded, totalBytesTotal);
+                            percentage = msgData.data.percentage;
+                        self.options.onUploadProgress(file, percentage);
                     }
                     break;
                 case 'UPLOAD_START':

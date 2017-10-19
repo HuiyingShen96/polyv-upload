@@ -8,6 +8,8 @@
   margin: auto;
   width: 100%;
   height: 100%;
+
+  background: rgba(0,0,0,.35);
 }
 .confirm {
   position: absolute;
@@ -24,7 +26,7 @@
   min-height: 200px;
   max-height: 450px;
 
-  background-color: #f9f9f9;
+  background-color: #fff;
 }
 .confirm-title {
   border-bottom: 1px solid #e8e8e8;
@@ -49,7 +51,7 @@
     margin: 0 10px;
   }
   .cancel {
-  	background-color: #fff;
+  	background-color: transparent;
   	color: #000;
 
   	&:hover {

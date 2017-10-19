@@ -265,6 +265,7 @@ export default class Utils {
             }
         };
     }
+
     head({
         url,
         cache,
@@ -341,5 +342,17 @@ export default class Utils {
                 status = '已删除';
         }
         return status;
+    }
+
+    uploadPic(file, options) {
+        let ossClient = new OSS.Wrapper(options.stsInfo);
+        ossClient.put(file.name, file)
+            .then(function(res) {
+                console.log('图片上传成功');
+                console.log(res);
+                // todo: 将地址传到后台给后台处理
+            }).catch(function(err) {
+                console.log(err);
+            });
     }
 }

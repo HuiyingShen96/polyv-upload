@@ -54,21 +54,34 @@ export default class InfoPanel extends Component {
             videoInfo
         } = this.props;
         let userData = window.userData;
-        utils.uploadFile({
-            url: this.props.BASE_URL.getVideoList,
-            queryParams: {
-                method: 'upFirstImage2'
-            },
-            data: {
-                vid: videoInfo.vid,
-                userid: userData.userid,
-                ts: userData.ts,
-                sign: userData.sign,
-                Filedata: file
-            },
+        utils.uploadPic(file, {
+            stsInfo: window.stsInfo,
+
+            // 需要随视频文件地址传到后台的数据
+            vid: videoInfo.vid,
+            userid: userData.userid,
+            ts: userData.ts,
+            sign: userData.sign,
+
+            // 回调函数
             done: res => this.doneSave(res),
             fail: err => this.failSave(err),
         });
+        // utils.uploadFile({
+        //     url: this.props.BASE_URL.getVideoList,
+        //     queryParams: {
+        //         method: 'upFirstImage2'
+        //     },
+        //     data: {
+        //         vid: videoInfo.vid,
+        //         userid: userData.userid,
+        //         ts: userData.ts,
+        //         sign: userData.sign,
+        //         Filedata: file
+        //     },
+        //     done: res => this.doneSave(res),
+        //     fail: err => this.failSave(err),
+        // });
     }
     changeCoverByMethod_2() {
         let {

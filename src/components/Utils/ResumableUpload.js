@@ -1,17 +1,13 @@
-import Utils from '../../components/Utils/Utils';
-
-let utils = new Utils();
+// import Utils from '../../components/Utils/Utils';
+// let utils = new Utils();
 
 export default class ResumableUpload {
     upload(file, options) {
-        console.log('upload');
-
-        this._init(file, options);
-        if (file) {
-            console.log('file exist');
-
-            this._start();
+        if (!file) {
+            return;
         }
+        this._init(file, options);
+        this._start();
     }
     fingerprint(file, title, {
         userid,
@@ -20,33 +16,23 @@ export default class ResumableUpload {
         return `polyv-${userid}-${cataid}-${title}-${file.type}-${file.size}`;
     }
     stop() {
-        if (this.uploadRequest) {
-            this.uploadRequest.abort();
-        }
-    }
-    getResponse() {
-        if (this.uploadRequest) {
-            return this.uploadRequest.responseText;
-        }
+        // this.ossClient.abortMultipartUpload(this.file.name, this.uploadId)
+        //     .then(function() {
+        //         console.log('已终止上传');
+        //     }).catch(function(err) {
+        //         console.log(err);
+        //     });
+
+        // todo: 调用接口
     }
 
     _init(file, options) {
-        console.log('init');
-
         let userid = options.userid,
             cataid = options.cataid;
 
         this.file = file;
-        this.options = {
-            endpoint: options.endpoint,
-            fingerprint: options.fingerprint || this.fingerprint(file, options.title, {
-                userid,
-                cataid
-            }),
-            resumable: options.resumable || !options.resetBefore, // 默认为true
-            resetBefore: options.resetBefore || false,
-            resetAfter: options.resetAfter || true,
-
+        this.userData = {
+            // 需要随视频文件地址传到后台的数据
             cataid: cataid,
             desc: options.desc,
             ext: options.ext,
@@ -54,30 +40,30 @@ export default class ResumableUpload {
             luping: options.luping,
             title: options.title,
             tag: options.tag,
-
+            // 传数据到后台时需要添加在请求头的数据
             ts: options.ts,
             hash: options.hash,
             userid: userid,
-
-            stsInfo: options.stsInfo,
         };
+        this.fingerprint = options.fingerprint || this.fingerprint(file, options.title, {
+            userid,
+            cataid
+        });
+        this.resumable = options.resumable || true; // 默认为true
+        // 回调函数
         this.progress = options.progress;
         this.done = options.done;
         this.fail = options.fail;
 
-        this.fileUrl = null;
         this.checkpoint = null;
-        this.bytesWritten = null;
-        this.uploadRequest = null;
+        this.uploadId = '';
+        this.ossClient = new OSS.Wrapper(options.stsInfo);
     }
     _start() {
-        console.log('start');
+        var fingerprint = this.fingerprint;
 
-        var options = this.options;
-        var fingerprint = options.fingerprint;
-
-        if (!options.resumable || options.resetBefore) { // disable resumable upload
-            this._removeCheckpoint(fingerprint); // Remove localStorage
+        if (!this.resumable) { // disable resumable upload
+            localStorage.removeItem(fingerprint);
         }
         this.checkpoint = this._getCheckpoint(fingerprint); // Get the file upload address from localStorage
 
@@ -85,132 +71,34 @@ export default class ResumableUpload {
             this.checkpoint.file = this.file;
         }
 
-        // let ossClient = new OSS.Wrapper(options.stsInfo);
-        // ossClient.multipartUpload(this.file.name, this.file, {
-        //     partSize: 1024 * 1024,
-        //     progress: this.progress,
-        //     checkpoint: this.checkpoint
-        // }).then(function(result) {
-        //     localStorage.setItem(fingerprint, null);
-        //     console.log('upload success: 100% ', result);
-        // }).catch(function(err) {
-        //     console.log(err);
-        // });
+        let that = this;
 
-        // if (this.fileUrl) { // There is a upload record.
-        //     this._head();
-        // } else {
-        //     this._post();
-        // }
-    }
-    _post() {
-        utils.post({
-            url: this.options.endpoint,
-            data: {
-                cataid: this.options.cataid,
-                desc: this.options.desc,
-                ext: this.options.ext,
-                extra: this.options.extra,
-                luping: this.options.luping,
-                title: this.options.title,
-                tag: this.options.tag,
-            },
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                'Final-Length': this.file.size,
-                ts: this.options.ts,
-                userid: this.options.userid,
-                hash: this.options.hash
-            },
-            done: (res, textStatus, XHR) => {
-                let location = XHR.getResponseHeader('Location');
-                if (!location) {
-                    return this._emitFail(`Could not get url for file resource. ${textStatus}`);
+        let progress = function(percentage, checkpoint) {
+            return function(done) {
+                that.uploadId = checkpoint.uploadId;
+                if (typeof that.progress === 'function') {
+                    that.progress(percentage);
                 }
-
-                this.fileUrl = location;
-                this._uploadFile(0, this.file.size - 1);
-            },
-            fail: (textStatus) => {
-                this._emitFail(`Could not post to file resource ${this.options.endpoint}. ${textStatus}`);
-            }
-        });
-    }
-    _head() {
-        let xhr = new XMLHttpRequest();
-        xhr.open('HEAD', this.fileUrl);
-
-        // xhr.setRequestHeader('Cache-Control', 'no-cache');
-        xhr.send();
-        xhr.onreadystatechange = () => {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    let offset = xhr.getResponseHeader('Offset');
-                    let bytesWritten = offset ? parseInt(offset, 10) : 0;
-                    this._uploadFile(bytesWritten, this.file.size - 1);
-                } else {
-                    localStorage.removeItem(this.fingerprint(this.file, this.options.title));
-                    this._post();
-                }
-            }
+                that._setCheckpoint(that.fingerprint, checkpoint);
+                done();
+            };
         };
-    }
-    _uploadFile(range_from, range_to) {
-        this.bytesWritten = range_from;
 
-        if (this.bytesWritten === this.file.size) { // Already done!
-            if (this.options.resetAfter === true) {
-                this._urlCache(false);
+        this.ossClient.multipartUpload(this.file.name, this.file, {
+            partSize: 210 * 1024,
+            progress: progress,
+            checkpoint: this.checkpoint
+        }).then(function(result) {
+            localStorage.setItem(fingerprint, null);
+            console.log(result);
+            // todo: 将地址传给后台存到数据库
+            // 成功之后调用以下语句
+            if (typeof that.done === 'function') {
+                that.done();
             }
-            this._emitProgress(range_from, this.file.size);
-            this._emitDone();
-            return;
-        }
-
-        this._urlCache(this.fileUrl);
-        this._emitProgress();
-
-        let bytesWrittenAtStart = this.bytesWritten;
-
-        let slice = this.file.slice || this.file.webkitSlice || this.file.mozSlice;
-        let blob = slice.call(this.file, range_from, range_to + 1, this.file.type);
-
-        let xhr = new XMLHttpRequest();
-        this.uploadRequest = xhr;
-        xhr.upload.addEventListener('progress', e => {
-            this.bytesWritten = bytesWrittenAtStart + e.loaded;
-            if (e && e.lengthComputable) {
-                this._emitProgress(range_from + e.loaded, this.file.size);
-            }
+        }).catch(function(err) {
+            console.log(err);
         });
-        xhr.upload.addEventListener('load', () => {
-            if (this.options.resetAfter === true) {
-                this._urlCache(false);
-            }
-            this._emitDone();
-        });
-        xhr.upload.addEventListener('error', () => {
-            var msg = xhr.responseText || xhr.status;
-            this._emitFail(msg);
-        });
-        xhr.upload.addEventListener('abort', () => {
-            console.log('Stop uploading!');
-        });
-
-        xhr.open('PATCH', this.fileUrl);
-        xhr.setRequestHeader('Offset', range_from);
-        xhr.setRequestHeader('Content-Type', 'application/offset+octet-stream');
-        xhr.onreadystatechange = () => {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-
-                } else {
-                    let msg = xhr.responseText || xhr.status;
-                    this._emitFail(msg);
-                }
-            }
-        };
-        xhr.send(blob);
     }
 
     // handle checkPoint
@@ -228,16 +116,7 @@ export default class ResumableUpload {
         }
         return result;
     }
-    _removeCheckpoint(fingerprint) {
-        return localStorage.removeItem(fingerprint);
-    }
 
-    _emitProgress(loaded, total) {
-        this.progress && this.progress(loaded, total);
-    }
-    _emitDone() {
-        this.done && this.done();
-    }
     _emitFail(err) {
         this.fail && this.fail(err);
     }

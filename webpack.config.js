@@ -61,8 +61,4 @@ module.exports = {
     externals: {
         'OSS': 'window.OSS',
     }
-    // node: {
-    //     fs: 'empty',
-    //     child_process: 'empty',
-    // },
 };

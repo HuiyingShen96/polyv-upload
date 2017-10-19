@@ -17,14 +17,6 @@ import Utils from '../../components/Utils/Utils';
 let utils = new Utils();
 import ResumableUpload from '../../components/Utils/ResumableUpload';
 let polyv = new ResumableUpload();
-// let polyv = null;
-
-let uploadServer = 'http://upload.polyv.net:1080/files/';
-
-let stsInfo = {
-    endpoint: 'oss-cn-shenzhen.aliyuncs.com',
-    bucket: 'polyvupload',
-};
 
 export default class UploadList extends Component {
     constructor(props) {
@@ -49,23 +41,20 @@ export default class UploadList extends Component {
                 tag: '',
             },
             speedValue: '0.0 kb/s',
-            totalBytesUploaded: 0,
-            totalBytesTotal: 0,
             confirmVisible: false,
             sysInfo: '',
         };
 
         this.uploadProgress = {
-            lastSize: 0,
-            newSize: 0,
-            totalBytesFinished: 0,
+            lastSize: 0, // 用来计算上传速度
+            newSize: 0, // 用来计算上传速度
         };
     }
 
     getTbodyData(files) {
         let tbodyData = [];
 
-        function setFileOptions({
+        let setFileOptions = function({
             name,
             value,
             index
@@ -76,16 +65,14 @@ export default class UploadList extends Component {
             this.setState({
                 files,
             });
-        }
+        };
 
-        function deleteFile(fileKey, disabled) {
+        let deleteFile = function(fileKey, disabled) {
             if (disabled) {
                 return;
             }
             let files = this.state.files.slice();
             let uploadStatus = this.state.uploadStatus;
-            let totalBytesTotal = this.state.totalBytesTotal;
-            let totalBytesUploaded = this.state.totalBytesUploaded;
 
             let index = files.findIndex(ele => {
                 return ele.key === fileKey;
@@ -103,16 +90,11 @@ export default class UploadList extends Component {
                 uploadStatus = 0;
             }
 
-            totalBytesTotal -= delFile.size;
-            totalBytesUploaded -= delFile.bytesUploaded;
-
             this.setState({
                 files,
                 uploadStatus,
-                totalBytesTotal,
-                totalBytesUploaded,
             });
-        }
+        };
 
         files.map((file, index) => {
             let uploadStatus = this.state.uploadStatus;
@@ -154,28 +136,20 @@ export default class UploadList extends Component {
         return tbodyData;
     }
     uploadFile(file, curIndex) {
-        function progress(curIndex, loaded, total) {
-            if (typeof loaded !== 'number' || typeof total !== 'number') {
+        let progress = function(curIndex, percentage) {
+            if (typeof percentage !== 'number') {
                 return;
             }
-
             let files = this.state.files.slice();
+            files[curIndex].progress = parseFloat((percentage * 100).toFixed(2));
+            let file = files[curIndex];
 
-            let totalBytesUploaded = this.uploadProgress.totalBytesFinished + loaded;
-
-            this.uploadProgress.newSize = loaded;
-            let percentComplete = ((loaded / total) * 100).toFixed(2);
-            files[curIndex].progress = parseFloat(percentComplete);
-            files[curIndex].bytesUploaded = loaded;
-
+            this.uploadProgress.newSize = Math.round(file.size * percentage);
             utils.sendMsg({
                 type: 'FILE_PROGRESS',
                 data: {
                     file: files[curIndex],
-                    bytesUploaded: loaded,
-                    bytesTotal: total,
-                    totalBytesUploaded: totalBytesUploaded,
-                    totalBytesTotal: this.state.totalBytesTotal,
+                    percentage,
                 },
                 url: window.userData.url
             });
@@ -183,16 +157,15 @@ export default class UploadList extends Component {
             this.setState({
                 files: files,
             });
-        }
+        };
 
-        function done() {
+        let done = function() {
             let files = this.state.files.slice();
             utils.sendMsg({
                 type: 'FILE_COMPLETE',
                 data: files[curIndex],
                 url: window.userData.url
             });
-            this.uploadProgress.totalBytesFinished += files[curIndex].size;
             curIndex++;
             let uploadStatus = this.state.uploadStatus;
             let sysInfo = '';
@@ -225,7 +198,7 @@ export default class UploadList extends Component {
                     });
                 }, 2000);
             }
-        }
+        };
 
         utils.sendMsg({
             type: 'UPLOAD_START',
@@ -240,24 +213,21 @@ export default class UploadList extends Component {
         cataid = cataid < 0 ? window.userData.cataid || '1' : cataid;
 
         let userData = window.userData;
-
-        let options = {
-            endpoint: uploadServer,
-            resetBefore: false,
-            resetAfter: true,
-
+        polyv.upload(file, {
+            stsInfo: window.stsInfo,
+            // 传数据到后台时需要添加在请求头的数据
             ts: userData.ts,
             hash: userData.hash,
             userid: userData.userid,
-            luping: userData.luping,
-            extra: userData.extra,
+            // 需要随视频文件地址传到后台的数据
             cataid,
-
-            tag: tag,
-            title: file.title,
             desc: file.desc,
             ext: file.type.replace(/.+\//, ''),
-
+            extra: userData.extra,
+            luping: userData.luping,
+            title: file.title,
+            tag: tag,
+            // 回调函数
             progress: progress.bind(this, curIndex),
             done: done.bind(this),
             fail: err => {
@@ -269,32 +239,7 @@ export default class UploadList extends Component {
                     url: window.userData.url
                 });
             }
-        };
-        if (!stsInfo.accessKeyId) {
-            utils.jsonp({
-                url: '//localhost:8088/sts-server/sts.php',
-                done: function(res) {
-                    console.log(res);
-
-                    res = JSON.parse(res);
-                    console.log(res);
-                    return;
-
-                    // stsInfo.accessKeyId = res.AccessKeyId;
-                    // stsInfo.accessKeySecret = res.AccessKeySecret;
-                    // stsInfo.stsToken = res.SecurityToken;
-
-                    // Object.assign(options.stsInfo, stsInfo);
-                    // polyv.upload(file, options);
-                },
-                fail: function() {
-                    console.log('获取STS信息失败，请刷新重试！');
-                    return;
-                },
-            });
-        }
-
-        // polyv = new ResumableUpload(file, options);
+        });
     }
 
     handleUploadBtnChange(files) {
@@ -407,7 +352,7 @@ export default class UploadList extends Component {
             this.setState({
                 speedValue,
             });
-        }, 1000);
+        }, 2000);
 
         this.setState({
             uploadStatus: 2,
@@ -421,14 +366,6 @@ export default class UploadList extends Component {
             fileOptions,
         });
     }
-
-    // componetWillUpdate(nextProps){
-    //     let fileOptions = Object.assign({}, this.state.fileOptions);
-    //     fileOptions.cataid = value;
-    //     this.setState({
-    //         fileOptions: 
-    //     });
-    // }
 
     render() {
         let {
@@ -481,7 +418,7 @@ export default class UploadList extends Component {
                         value={tag}
                         placeholder='标签 用" , "分隔' />
                     <Button value="清空" className="btn-group-element" 
-                        disabled={uploadStatus === 2}
+                        disabled={uploadStatus === 2 || files.length < 1}
                         onClick={this.handleEmptyClick} />
                     <Button value={uploadStatus === 3 ? '继续':'暂停'} className="btn-group-element" 
                         onClick={this.handlePauseClick} 
@@ -491,7 +428,7 @@ export default class UploadList extends Component {
                     <span className="btn-group-element">
                         <input type="checkbox" name="luping" id="luping" checked
                             onChange={this.handleLupingChange} />
-                        <label htmlFor="luping">进行视频课件优化处理</label>
+                        <label htmlFor="luping" className="luping">进行视频课件优化处理<span>针对录屏类视频课件，画质更清晰</span></label>
                     </span>
                     <Button id="uploadFile" value="上传" className="btn-group-element upload" 
                         onClick={this.handleUploadClick} 

@@ -14,6 +14,10 @@ let utils = new Utils();
 import './base.scss';
 
 window.userData = null;
+window.stsInfo = {
+    endpoint: 'oss-cn-shenzhen.aliyuncs.com',
+    bucket: 'polyvupload',
+};
 
 class UploadModal extends Component {
     constructor(props) {
@@ -23,8 +27,8 @@ class UploadModal extends Component {
                 getVideoList: '//v.polyv.net/uc/services/rest',
                 getLatestPic: '//v.polyv.net/uc/video/recentFirstImages',
                 getCategory: '//v.polyv.net/uc/cata/listjson',
+                getStsInfo: '//localhost:8088/sts-server/sts.php',
             },
-            // userData: null,
             cataOptions: null,
             videoListIsClicked: false,
         };
@@ -61,6 +65,20 @@ class UploadModal extends Component {
             }
         });
     }
+    fetchStsInfo() {
+        utils.jsonp({
+            url: this.state.BASE_URL.getStsInfo,
+            done: function(res) {
+                window.stsInfo.accessKeyId = res.AccessKeyId;
+                window.stsInfo.accessKeySecret = res.AccessKeySecret;
+                window.stsInfo.stsToken = res.SecurityToken;
+            },
+            fail: function() {
+                console.log('获取STS授权信息失败，请刷新重试！');
+                return;
+            },
+        });
+    }
 
     componentDidMount() {
         utils.addHander(window, 'message', event => {
@@ -78,27 +96,25 @@ class UploadModal extends Component {
                 cataid: data.cataid,
                 luping: data.luping,
                 extra: data.extra,
+                component: data.component || 'all',
             };
+
             if (!this.state.cataOptions) {
                 this.fetchCategory();
             }
-            // this.setState({
-            //     userData: userData,
-            // });
         });
+        this.fetchStsInfo();
     }
 
     render() {
         let {
             BASE_URL,
-            // userData,
             cataOptions,
             videoListIsClicked,
         } = this.state;
 
         let publicProps = {
             BASE_URL,
-            // userData,
         };
         let uploadListPorps = {
             cataOptions,
