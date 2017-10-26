@@ -23,23 +23,17 @@ export default class Utils {
         }
     }
     param(a, traditional) {
-
         let rbracket = /\[\]$/;
 
         function buildParams(prefix, obj, traditional, add) {
             let name;
-
             if (Array.isArray(obj)) {
-
                 // Serialize array item.
                 obj.forEach((v, i) => {
                     if (traditional || rbracket.test(prefix)) {
-
                         // Treat each array item as a scalar.
                         add(prefix, v);
-
                     } else {
-
                         // Item is non-scalar (array or object), encode its numeric index.
                         buildParams(
                             prefix + '[' + (typeof v === 'object' && v !== null ? i : '') + ']',
@@ -49,52 +43,39 @@ export default class Utils {
                         );
                     }
                 });
-
             } else if (!traditional && typeof obj === 'object') {
-
                 // Serialize object item.
                 for (name in obj) {
                     buildParams(prefix + '[' + name + ']', obj[name], traditional, add);
                 }
-
             } else {
-
                 // Serialize scalar item.
                 add(prefix, obj);
             }
         }
-
-
         var prefix,
             s = [],
             add = function(key, valueOrFunction) {
-
                 // If value is a function, invoke it and use its return value
                 var value = typeof valueOrFunction === 'function' ?
                     valueOrFunction() :
                     valueOrFunction;
-
                 s[s.length] = encodeURIComponent(key) + '=' +
                     encodeURIComponent(value === null ? '' : value);
             };
-
         // If an array was passed in, assume that it is an array of form elements.
         if (Array.isArray(a) || (a.jquery && typeof a === 'object')) {
-
             // Serialize the form elements
             a.forEach((ele) => {
                 add(ele.name, ele.value);
             });
-
         } else {
-
             // If traditional, encode the "old" way (the way 1.3.2 or older
             // did it), otherwise encode params recursively.
             for (prefix in a) {
                 buildParams(prefix, a[prefix], traditional, add);
             }
         }
-
         // Return the resulting serialization
         return s.join('&');
         // let encodedString = '';
@@ -139,8 +120,8 @@ export default class Utils {
     }
     post({
         url,
-        queryParams,
         data,
+        queryParams,
         headers,
         done,
         fail
@@ -149,9 +130,13 @@ export default class Utils {
             let queryStr = this.param(queryParams);
             url += `?${queryStr}`;
         }
-        let dataStr = data ? this.param(data) : '';
-
         let xhr = new XMLHttpRequest();
+        let fd = new FormData();
+        for (let key in data) {
+            if (data.hasOwnProperty(key)) {
+                fd.append(key, data[key]);
+            }
+        }
         xhr.open('POST', url);
         if (headers) {
             for (let key in headers) {
@@ -160,14 +145,14 @@ export default class Utils {
                 }
             }
         }
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === XMLHttpRequest.DONE) {
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState === 4) {
                 switch (xhr.status) {
                     case 200:
-                        done(xhr.responseText, xhr.status, xhr);
+                        done(JSON.parse(xhr.responseText));
                         break;
                     case 201:
-                        done(xhr.responseText, xhr.status, xhr);
+                        done(xhr.status, xhr);
                         break;
                     default:
                         fail(xhr.status, xhr);
@@ -175,7 +160,7 @@ export default class Utils {
                 }
             }
         };
-        xhr.send(dataStr);
+        xhr.send(fd);
     }
     getJSON({
         url,
@@ -347,12 +332,13 @@ export default class Utils {
     uploadPic(file, options) {
         let ossClient = new OSS.Wrapper(options.stsInfo);
         ossClient.put(file.name, file)
-            .then(function(res) {
+            .then((res) => {
                 console.log('图片上传成功');
                 console.log(res);
-                // todo: 将地址传到后台给后台处理
+                options.done(res);
             }).catch(function(err) {
                 console.log(err);
+                options.fail(err);
             });
     }
 }

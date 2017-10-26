@@ -31,7 +31,7 @@ export default class VideoList extends Component {
                     title: '标题',
                     duration: '时长',
                     status: '状态',
-                    ptime: '创建时间',
+                    formatPtime: '创建时间',
                 },
                 tbodyData: [],
             },
@@ -61,7 +61,7 @@ export default class VideoList extends Component {
                 title: <div className="titleWrap" title={vInfo.title}>{vInfo.title}</div>,
                 duration: vInfo.duration,
                 status: utils.transformStatus(vInfo.status),
-                ptime: vInfo.ptime
+                formatPtime: vInfo.formatPtime
             });
         });
         return tbodyData;
@@ -72,7 +72,7 @@ export default class VideoList extends Component {
             videoListTableData = Object.assign({}, this.state.videoListTableData),
             videoList = videoListData.data;
 
-        if (videoListData.error !== '0') {
+        if (videoListData.code !== 200) {
             sysInfo = '获取视频列表信息出错！请刷新重试';
             pageStatus = {
                 pre: false,
@@ -122,7 +122,7 @@ export default class VideoList extends Component {
         let sysInfo = '',
             videoInfo = videoInfoData.data[0];
 
-        if (videoInfoData.error !== '0') {
+        if (videoInfoData.status !== 'success') {
             sysInfo = '获取视频信息出错！请刷新重试';
         }
 
@@ -136,7 +136,8 @@ export default class VideoList extends Component {
         if (!keyword) {
             this.fetchVideoList(1);
         } else {
-            this.fetchVideoByKeyword(1, keyword);
+            // this.fetchVideoByKeyword(1, keyword);
+            this.fetchVideoList(1, keyword);
         }
 
         let infoPanelVisible = false;
@@ -200,7 +201,7 @@ export default class VideoList extends Component {
         // this.handleInfoPanelVisibleChange(infoPanelVisible);
     }
 
-    fetchVideoList(pageNum) {
+    fetchVideoList(pageNum, keyword) {
         this.setState({
             loading: true,
             curPageNum: pageNum,
@@ -208,25 +209,36 @@ export default class VideoList extends Component {
         const userData = window.userData;
 
         let queryParams = {
-            method: 'getNewList2',
-            userid: userData.userid,
-            ts: userData.ts,
+            ptime: userData.ptime,
             sign: userData.sign,
-            pageNum,
-            catatree: userData.catatree,
-            numPerPage: this.numPerPage,
+            hash: userData.hash,
+            // numPerPage: this.numPerPage, // 默认为99
+            pageNum: pageNum,
+            keyword: keyword || '',
+            cataid: userData.cataid,
+            compatible: 1,
         };
+        let url = this.props.BASE_URL.getVideoList.replace('{userid}', userData.userid);
 
         utils.getJSON({
-            url: this.props.BASE_URL.getVideoList,
+            url: url,
             data: queryParams,
             done: data => {
+                console.log(data);
+
                 this.processVideoListData(data);
-                this.setState({
-                    loading: false,
-                    infoPanelVisible: false,
-                });
-                this.props.onListChange();
+
+                if (!keyword) {
+                    this.setState({
+                        loading: false,
+                        infoPanelVisible: false,
+                    });
+                    this.props.onListChange();
+                } else {
+                    this.setState({
+                        loading: false,
+                    });
+                }
             },
             fail: err => console.log(err)
         });
@@ -237,7 +249,6 @@ export default class VideoList extends Component {
             curPageNum: pageNum,
         });
         let numPerPage = this.state.numPerPage;
-        // const userData = this.props.userData;
         const userData = window.userData;
         let BASE_URL = this.props.BASE_URL;
         let queryParams = {
@@ -248,6 +259,8 @@ export default class VideoList extends Component {
             pageNum,
             numPerPage,
             keyword: keyword,
+            tag: userData.tag || '',
+            catatree: userData.catatree || '',
         };
 
         utils.getJSON({
@@ -270,15 +283,17 @@ export default class VideoList extends Component {
         // let userData = this.props.userData;
         let userData = window.userData;
         let queryParams = {
-            method: 'getById2',
+            vid: vid,
             userid: userData.userid,
-            ts: userData.ts,
+            ptime: userData.ptime,
             sign: userData.sign,
-            vid,
+            hash: userData.hash,
+            compatible: 1,
         };
+        let url = this.props.BASE_URL.getVideoInfo.replace('{userid}', userData.userid);
 
         utils.getJSON({
-            url: BASE_URL.getVideoList,
+            url: url,
             data: queryParams,
             done: data => {
                 this.processVideoInfoData(data);
@@ -293,7 +308,6 @@ export default class VideoList extends Component {
     componentWillReceiveProps(nextProps) {
         let {
             videoListIsClicked,
-            // userData,
         } = nextProps;
         if (videoListIsClicked && window.userData) {
             this.fetchVideoList(1);

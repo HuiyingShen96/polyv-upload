@@ -43,6 +43,7 @@ export default class UploadList extends Component {
             speedValue: '0.0 kb/s',
             confirmVisible: false,
             sysInfo: '',
+            luping: this.props.luping,
         };
 
         this.uploadProgress = {
@@ -214,17 +215,19 @@ export default class UploadList extends Component {
 
         let userData = window.userData;
         polyv.upload(file, {
-            stsInfo: window.stsInfo,
+            // stsInfo: window.stsInfo,
+            url_getStsInfo: this.props.BASE_URL.getStsInfo,
             // 传数据到后台时需要添加在请求头的数据
-            ts: userData.ts,
+            ptime: userData.ptime,
             hash: userData.hash,
+            sign: userData.sign,
             userid: userData.userid,
             // 需要随视频文件地址传到后台的数据
             cataid,
             desc: file.desc,
             ext: file.type.replace(/.+\//, ''),
             extra: userData.extra,
-            luping: userData.luping,
+            luping: this.state.luping,
             title: file.title,
             tag: tag,
             // 回调函数
@@ -282,16 +285,27 @@ export default class UploadList extends Component {
     }
     handleTagChange(e) {
         let fileOptions = Object.assign({}, this.state.fileOptions);
-        fileOptions.tag = e.target.value;
+        let tag = e.target.value;
+        fileOptions.tag = tag;
+        window.userData.tag = tag;
         this.setState({
             fileOptions,
         });
     }
     handleLupingChange(e) {
-        let fileOptions = Object.assign({}, this.state.fileOptions);
-        fileOptions.luping = e.target.value ? '1' : '0';
+        const {
+            checked,
+            value
+        } = e.target;
+        let luping = this.state.luping;
+
+        if (checked && value === 'luping') {
+            luping = '1';
+        } else {
+            luping = '0';
+        }
         this.setState({
-            fileOptions,
+            luping,
         });
     }
     handleEmptyClick() {
@@ -367,6 +381,11 @@ export default class UploadList extends Component {
         });
     }
 
+    componentWillReceiveProps(nextProps) {
+        this.setState({
+            luping: nextProps.luping
+        });
+    }
     render() {
         let {
             confirmVisible,
@@ -375,6 +394,7 @@ export default class UploadList extends Component {
             files,
             speedValue,
             sysInfo,
+            luping,
         } = this.state;
         let {
             cataOptions,
@@ -426,9 +446,13 @@ export default class UploadList extends Component {
                     <span style={{display: uploadStatus === 2 ? 'inline' : 'none'}}
                         className="speed btn-group-element">{speedValue}</span>
                     <span className="btn-group-element">
-                        <input type="checkbox" name="luping" id="luping" checked
-                            onChange={this.handleLupingChange} />
-                        <label htmlFor="luping" className="luping">进行视频课件优化处理<span>针对录屏类视频课件，画质更清晰</span></label>
+                        <input type="checkbox" name="luping" id="luping"
+                            onChange={this.handleLupingChange} 
+                            checked={luping === '1'} value="luping" />
+                        <label htmlFor="luping" className="luping">
+                            进行视频课件优化处理
+                            <span>针对录屏类视频课件，画质更清晰</span>
+                        </label>
                     </span>
                     <Button id="uploadFile" value="上传" className="btn-group-element upload" 
                         onClick={this.handleUploadClick} 
@@ -446,6 +470,5 @@ export default class UploadList extends Component {
 UploadList.speedTimer = null;
 UploadList.propTypes = {
     BASE_URL: PropTypes.object,
-    // userData: PropTypes.object,
     cataOptions: PropTypes.object,
 };

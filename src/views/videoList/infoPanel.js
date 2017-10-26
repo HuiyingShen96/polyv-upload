@@ -50,42 +50,46 @@ export default class InfoPanel extends Component {
             return;
         }
         let {
-            // userData,
             videoInfo
         } = this.props;
         let userData = window.userData;
-        utils.uploadPic(file, {
-            stsInfo: window.stsInfo,
+        let url = this.props.BASE_URL.postCoverImage.replace('{userid}', userData.userid);
 
-            // 需要随视频文件地址传到后台的数据
-            vid: videoInfo.vid,
-            userid: userData.userid,
-            ts: userData.ts,
-            sign: userData.sign,
-
-            // 回调函数
+        utils.uploadFile({
+            url: url,
+            data: {
+                ptime: userData.ptime,
+                sign: userData.sign,
+                hash: userData.hash,
+                vid: userData.vid,
+                Filedata: file,
+                compatible: 1,
+            },
             done: res => this.doneSave(res),
             fail: err => this.failSave(err),
         });
-        // utils.uploadFile({
-        //     url: this.props.BASE_URL.getVideoList,
-        //     queryParams: {
-        //         method: 'upFirstImage2'
+        // utils.uploadPic(file, {
+        //     stsInfo: window.stsInfo,
+
+        //     // 需要随视频文件地址传到后台的数据
+        //     vid: videoInfo.vid,
+        //     userid: userData.userid,
+        //     ts: userData.ts,
+        //     sign: userData.sign,
+
+        //     // 回调函数
+        //     done: res => {
+        //         let url = this.props.BASE_URL.
+        //         utils.post({
+        //             url: url,
+        //         })
+        //         this.doneSave(res);
         //     },
-        //     data: {
-        //         vid: videoInfo.vid,
-        //         userid: userData.userid,
-        //         ts: userData.ts,
-        //         sign: userData.sign,
-        //         Filedata: file
-        //     },
-        //     done: res => this.doneSave(res),
         //     fail: err => this.failSave(err),
         // });
     }
     changeCoverByMethod_2() {
         let {
-            // userData,
             videoInfo
         } = this.props;
         let userData = window.userData;
@@ -116,7 +120,7 @@ export default class InfoPanel extends Component {
         });
     }
     doneSave(res) {
-        if (res.error === '0') {
+        if (res.status === 'success') {
             this.setState({
                 sysInfo: '成功更换封面',
             });
@@ -197,17 +201,25 @@ export default class InfoPanel extends Component {
     }
 
     fetchLatestPic() {
-        let BASE_URL = this.props.BASE_URL;
         let userData = window.userData;
-        utils.jsonp({
-            url: BASE_URL.getLatestPic,
+        let url = this.props.BASE_URL.getLatestPic.replace('{userid}', userData.userid);
+        utils.getJSON({
+            url: url,
             data: {
-                userid: userData.userid
+                // userid: userData.userid,
+                ptime: userData.ptime,
+                sign: userData.sign,
+                hash: userData.hash,
+                compatible: 1,
             },
-            done: latestPic => {
-                this.setState({
-                    latestPic,
-                });
+            done: res => {
+                if (res.code === 200) {
+                    let latestPic = res.data;
+                    this.setState({
+                        latestPic,
+                    });
+                }
+
             }
         });
     }
@@ -352,7 +364,7 @@ export default class InfoPanel extends Component {
                 <section className="section_3">
                     <Tabs {...tabsProps}>
                         <TabPanel className="screenshot" order="0" tab={'视频截图'}>
-                            {videoInfo.images && videoInfo.images.map((imgUrl, index) => {
+                            {videoInfo.imageUrls && videoInfo.imageUrls.map((imgUrl, index) => {
                                 return <img src={imgUrl} key={index} onClick={this.handleImgClick.bind(this, {selectedIndex:index, imgUrl: imgUrl})} />;
                             })}
                         </TabPanel>
@@ -372,14 +384,12 @@ InfoPanel.uploadMethod = null;
 InfoPanel.isChange = false;
 
 InfoPanel.propTypes = {
-    // userData: PropTypes.object,
     BASE_URL: PropTypes.object,
     visible: PropTypes.bool,
     videoInfo: PropTypes.object,
     latestPic: PropTypes.array,
 };
 InfoPanel.defaultProps = {
-    // userData: {},
     BASE_URL: {},
     visible: false,
     videoInfo: null,

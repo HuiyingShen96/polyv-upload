@@ -1,5 +1,5 @@
-// import Utils from '../../components/Utils/Utils';
-// let utils = new Utils();
+import Utils from '../../components/Utils/Utils';
+let utils = new Utils();
 
 export default class ResumableUpload {
     upload(file, options) {
@@ -32,7 +32,12 @@ export default class ResumableUpload {
 
         this.file = file;
         this.userData = {
-            // 需要随视频文件地址传到后台的数据
+            ptime: options.ptime,
+            hash: options.hash,
+            sign: options.sign,
+            userid: userid,
+        };
+        this.fileData = {
             cataid: cataid,
             desc: options.desc,
             ext: options.ext,
@@ -40,11 +45,8 @@ export default class ResumableUpload {
             luping: options.luping,
             title: options.title,
             tag: options.tag,
-            // 传数据到后台时需要添加在请求头的数据
-            ts: options.ts,
-            hash: options.hash,
-            userid: userid,
         };
+        this.url_getStsInfo = options.url_getStsInfo;
         this.fingerprint = options.fingerprint || this.fingerprint(file, options.title, {
             userid,
             cataid
@@ -57,47 +59,87 @@ export default class ResumableUpload {
 
         this.checkpoint = null;
         this.uploadId = '';
-        this.ossClient = new OSS.Wrapper(options.stsInfo);
+        this.ossClient = null; //new OSS.Wrapper(options.stsInfo)
     }
     _start() {
-        var fingerprint = this.fingerprint;
+        let userData = this.userData;
+        let fileData = this.fileData;
+        let url = this.url_getStsInfo.replace('{userid}', userData.userid);
 
-        if (!this.resumable) { // disable resumable upload
-            localStorage.removeItem(fingerprint);
-        }
-        this.checkpoint = this._getCheckpoint(fingerprint); // Get the file upload address from localStorage
+        utils.post({
+            url: url,
+            data: {
+                ptime: userData.ptime, // 当前时间的毫秒级时间戳（13位），30分钟内有效
+                sign: userData.sign,
+                hash: userData.hash,
 
-        if (typeof this.checkpoint === 'object' && this.checkpoint) {
-            this.checkpoint.file = this.file;
-        }
+                title: fileData.title,
+                describ: fileData.desc,
+                cataid: fileData.cataid,
+                tag: fileData.tag,
+                luping: fileData.luping,
 
-        let that = this;
+                filesize: this.file.size,
 
-        let progress = function(percentage, checkpoint) {
-            return function(done) {
-                that.uploadId = checkpoint.uploadId;
-                if (typeof that.progress === 'function') {
-                    that.progress(percentage);
+                autoid: 1, // 自动生成vid，无需在请求参数中传vid
+
+                compatible: 1,
+            },
+            done: res => {
+                if (res.status !== 'success') {
+                    console.log('获取sts信息出错！刷新重试！');
+                    return;
                 }
-                that._setCheckpoint(that.fingerprint, checkpoint);
-                done();
-            };
-        };
+                let data = res.data;
+                let stsInfo = {
+                    endpoint: data.endpoint,
+                    bucket: data.bucketName,
+                    accessKeyId: data.accessId,
+                    accessKeySecret: data.accessKey,
+                    stsToken: data.token,
+                };
+                this.ossClient = new OSS.Wrapper(stsInfo);
 
-        this.ossClient.multipartUpload(this.file.name, this.file, {
-            partSize: 210 * 1024,
-            progress: progress,
-            checkpoint: this.checkpoint
-        }).then(function(result) {
-            localStorage.setItem(fingerprint, null);
-            console.log(result);
-            // todo: 将地址传给后台存到数据库
-            // 成功之后调用以下语句
-            if (typeof that.done === 'function') {
-                that.done();
+                let fingerprint = this.fingerprint;
+
+                if (!this.resumable) { // disable resumable upload
+                    localStorage.removeItem(fingerprint);
+                }
+                this.checkpoint = this._getCheckpoint(fingerprint); // Get the file upload address from localStorage
+
+                if (typeof this.checkpoint === 'object' && this.checkpoint) {
+                    this.checkpoint.file = this.file;
+                }
+
+                let that = this;
+
+                let progress = function(percentage, checkpoint) {
+                    return function(done) {
+                        that.uploadId = checkpoint.uploadId;
+                        if (typeof that.progress === 'function') {
+                            that.progress(percentage);
+                        }
+                        that._setCheckpoint(that.fingerprint, checkpoint);
+                        done();
+                    };
+                };
+
+                this.ossClient.multipartUpload(this.file.name, this.file, {
+                    partSize: 210 * 1024,
+                    progress: progress,
+                    checkpoint: this.checkpoint
+                }).then(function(result) {
+                    localStorage.setItem(fingerprint, null);
+                    console.log(result);
+                    // todo: 将地址传给后台存到数据库
+                    // 成功之后调用以下语句
+                    if (typeof that.done === 'function') {
+                        that.done();
+                    }
+                }).catch(function(err) {
+                    console.log(err);
+                });
             }
-        }).catch(function(err) {
-            console.log(err);
         });
     }
 

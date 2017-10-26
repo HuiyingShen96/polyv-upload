@@ -13,6 +13,7 @@ function PolyvUpload(options) {
         luping: (options.luping || '0') + '',
         extra: JSON.stringify(options.extra || {}),
         source: 'polyv-upload',
+        component: options.component,
         response: options.response,
         openWrap: options.openWrap,
         onCancle: options.onCancle,
