@@ -2,6 +2,11 @@ import Utils from '../../components/Utils/Utils';
 let utils = new Utils();
 
 export default class ResumableUpload {
+    constructor() {
+        this.upload = this.upload.bind(this);
+        this.fingerprint = this.fingerprint.bind(this);
+        this.stop = this.stop.bind(this);
+    }
     upload(file, options) {
         if (!file) {
             return;
@@ -16,14 +21,8 @@ export default class ResumableUpload {
         return `polyv-${userid}-${cataid}-${title}-${file.type}-${file.size}`;
     }
     stop() {
-        // this.ossClient.abortMultipartUpload(this.file.name, this.uploadId)
-        //     .then(function() {
-        //         console.log('已终止上传');
-        //     }).catch(function(err) {
-        //         console.log(err);
-        //     });
-
-        // todo: 调用接口
+        this.ossClient.stopMultipartUpload();
+        console.log('暂停上传');
     }
 
     _init(file, options) {
@@ -45,12 +44,14 @@ export default class ResumableUpload {
             luping: options.luping,
             title: options.title,
             tag: options.tag,
+            fingerprint: options.fingerprint || this.fingerprint(file, options.title, {
+                userid,
+                cataid
+            }),
         };
         this.url_getStsInfo = options.url_getStsInfo;
-        this.fingerprint = options.fingerprint || this.fingerprint(file, options.title, {
-            userid,
-            cataid
-        });
+        this.url_completeUpload = options.url_completeUpload;
+
         this.resumable = options.resumable || true; // 默认为true
         // 回调函数
         this.progress = options.progress;
@@ -59,7 +60,7 @@ export default class ResumableUpload {
 
         this.checkpoint = null;
         this.uploadId = '';
-        this.ossClient = null; //new OSS.Wrapper(options.stsInfo)
+        this.ossClient = null;
     }
     _start() {
         let userData = this.userData;
@@ -91,6 +92,7 @@ export default class ResumableUpload {
                     return;
                 }
                 let data = res.data;
+                this.fileData.vid = data.vid;
                 let stsInfo = {
                     endpoint: data.endpoint,
                     bucket: data.bucketName,
@@ -100,7 +102,7 @@ export default class ResumableUpload {
                 };
                 this.ossClient = new OSS.Wrapper(stsInfo);
 
-                let fingerprint = this.fingerprint;
+                let fingerprint = this.fileData.fingerprint;
 
                 if (!this.resumable) { // disable resumable upload
                     localStorage.removeItem(fingerprint);
@@ -119,23 +121,47 @@ export default class ResumableUpload {
                         if (typeof that.progress === 'function') {
                             that.progress(percentage);
                         }
-                        that._setCheckpoint(that.fingerprint, checkpoint);
+                        that._setCheckpoint(that.fileData.fingerprint, checkpoint);
                         done();
                     };
                 };
 
-                this.ossClient.multipartUpload(this.file.name, this.file, {
+                let multipartUpload = this.ossClient.multipartUpload(this.file.name, this.file, {
                     partSize: 210 * 1024,
                     progress: progress,
                     checkpoint: this.checkpoint
-                }).then(function(result) {
-                    localStorage.setItem(fingerprint, null);
-                    console.log(result);
-                    // todo: 将地址传给后台存到数据库
-                    // 成功之后调用以下语句
-                    if (typeof that.done === 'function') {
-                        that.done();
+                }).then(result => {
+                    if (!result.stop) {
+                        localStorage.setItem(fingerprint, null);
+                        console.log(result);
+
+                        // todo: 将地址传给后台存到数据库
+                        let url = that.url_completeUpload.replace('{userid}', userData.userid);
+                        let tempArr = result.res.requestUrls[0].split('?');
+                        let videoUrl = tempArr[0];
+                        utils.post({
+                            url: url,
+                            data: {
+                                ptime: userData.ptime,
+                                sign: userData.sign,
+                                hash: userData.hash,
+                                object: videoUrl,
+                                etag: result.etag,
+                                vid: that.fileData.vid,
+                                compatible: 1,
+                            },
+                            done: res => {
+                                if (res.status === 'success' && typeof that.done === 'function') {
+                                    that.done();
+                                }
+                            },
+                            fail: err => {
+                                console.log(err);
+                            }
+                        });
                     }
+
+
                 }).catch(function(err) {
                     console.log(err);
                 });

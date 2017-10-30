@@ -18,11 +18,6 @@ window.userData = {
     cataid: 1, // 默认
     luping: '0', // 默认
 };
-// window.stsInfo = {
-//     endpoint: 'oss-cn-shenzhen.aliyuncs.com',
-//     bucket: 'polyvupload',
-// };
-
 class UploadModal extends Component {
     constructor(props) {
         super(props);
@@ -38,6 +33,8 @@ class UploadModal extends Component {
                 getStsInfo: '//api.polyv.net/v2/aliyunoss/{userid}/init',
                 // postCoverImage: '//my.polyv.net/v2/file/{userid}/coverImage',
                 postCoverImage: '//apollo.polyv.net/v2/file/{userid}/coverImage', // test
+                coverImage: '//api.polyv.net/v2/video/{userid}/coverImage',
+                completeUpload: '//api.polyv.net/v2/aliyunoss/{userid}/completeUpload',
             },
             cataOptions: null,
             videoListIsClicked: false,

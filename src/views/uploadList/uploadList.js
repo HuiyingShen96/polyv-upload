@@ -122,7 +122,7 @@ export default class UploadList extends Component {
                     <div>
                         <p>{size} / {type}</p>
                         <div className='progressBar-wrap'>
-                            <div className='progressBar' style={{width: `${file.progress}%`}}></div>
+                            <div className='progressBar' style={{transition: 'all .1s linear',  width: `${file.progress}%`}}></div>
                         </div>
                     </div>
                 ),
@@ -138,6 +138,9 @@ export default class UploadList extends Component {
     }
     uploadFile(file, curIndex) {
         let progress = function(curIndex, percentage) {
+            if (this.state.uploadStatus === 3) { // 暂停状态不用更新进度
+                return;
+            }
             if (typeof percentage !== 'number') {
                 return;
             }
@@ -217,6 +220,7 @@ export default class UploadList extends Component {
         polyv.upload(file, {
             // stsInfo: window.stsInfo,
             url_getStsInfo: this.props.BASE_URL.getStsInfo,
+            url_completeUpload: this.props.BASE_URL.completeUpload,
             // 传数据到后台时需要添加在请求头的数据
             ptime: userData.ptime,
             hash: userData.hash,
@@ -253,7 +257,7 @@ export default class UploadList extends Component {
 
         newFiles.forEach(file => {
             file.key = `${addTime}_${file.name}`;
-            file.title = file.name.split('.')[0];
+            file.title = file.name;
             file.desc = '';
             file.progress = 0;
             file.bytesUploaded = 0;

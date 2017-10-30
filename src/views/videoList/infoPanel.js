@@ -68,25 +68,6 @@ export default class InfoPanel extends Component {
             done: res => this.doneSave(res),
             fail: err => this.failSave(err),
         });
-        // utils.uploadPic(file, {
-        //     stsInfo: window.stsInfo,
-
-        //     // 需要随视频文件地址传到后台的数据
-        //     vid: videoInfo.vid,
-        //     userid: userData.userid,
-        //     ts: userData.ts,
-        //     sign: userData.sign,
-
-        //     // 回调函数
-        //     done: res => {
-        //         let url = this.props.BASE_URL.
-        //         utils.post({
-        //             url: url,
-        //         })
-        //         this.doneSave(res);
-        //     },
-        //     fail: err => this.failSave(err),
-        // });
     }
     changeCoverByMethod_2() {
         let {
@@ -98,22 +79,24 @@ export default class InfoPanel extends Component {
         } = this.state;
 
         let extraData = uploadData.hasOwnProperty('selectedIndex') ? {
-            selectedIndex: uploadData.selectedIndex
+            index: uploadData.selectedIndex
         } : {
             recentId: uploadData.recentId
         };
 
         let data = {
-            method: 'selectImage2',
-            userid: userData.userid,
-            ts: userData.ts,
+            ptime: userData.ptime,
             sign: userData.sign,
-            vid: videoInfo.vid
+            hash: userData.hash,
+            ts: userData.ts,
+            vid: videoInfo.vid,
+            compatible: 1,
         };
         Object.assign(data, extraData);
 
-        utils.getJSON({
-            url: this.props.BASE_URL.getVideoList,
+        let url = this.props.BASE_URL.coverImage.replace('{userid}', userData.userid);
+        utils.post({
+            url: url,
             data,
             done: res => this.doneSave(res),
             fail: err => this.failSave(err),
